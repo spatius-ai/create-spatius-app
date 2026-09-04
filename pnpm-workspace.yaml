@@ -1,0 +1,6 @@
+allowBuilds:
+  esbuild: true
+autoInstallPeers: false
+preferFrozenLockfile: true
+saveExact: true
+strictPeerDependencies: true

@@ -1,0 +1,73 @@
+{
+  "name": "create-spatius-app",
+  "version": "0.0.0",
+  "description": "Create a Spatius app with a web frontend, Cloudflare Worker, and LiveKit agent.",
+  "type": "module",
+  "bin": {
+    "create-spatius-app": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "schemas",
+    "template"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm dependencies:check && pnpm test:coverage && pnpm test:e2e && pnpm package:check",
+    "dependencies:check": "pnpm peers check",
+    "dev": "tsx src/cli.ts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint .",
+    "package:check": "pnpm build && publint && node scripts/check-package.mjs",
+    "prepack": "pnpm build",
+    "prepublishOnly": "pnpm check",
+    "test": "vitest run tests/unit",
+    "test:coverage": "vitest run tests/unit --coverage",
+    "test:e2e": "pnpm build && vitest run tests/e2e",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@11.1.2",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/spatius-ai/create-spatius-app.git"
+  },
+  "bugs": {
+    "url": "https://github.com/spatius-ai/create-spatius-app/issues"
+  },
+  "homepage": "https://github.com/spatius-ai/create-spatius-app#readme",
+  "keywords": [
+    "cloudflare",
+    "livekit",
+    "scaffold",
+    "spatius",
+    "starter"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@clack/prompts": "^1.7.0",
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^26.4.1",
+    "@vercel/detect-agent": "1.2.5",
+    "@vitest/coverage-v8": "4.1.11",
+    "ajv": "8.20.0",
+    "commander": "^15.0.0",
+    "eslint": "^10.9.1",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.12.0",
+    "prettier": "^3.9.6",
+    "publint": "0.3.24",
+    "tsup": "^8.5.1",
+    "tsx": "^4.23.13",
+    "typescript": "^6.0.2",
+    "typescript-eslint": "^8.69.0",
+    "vitest": "^4.1.11"
+  }
+}
