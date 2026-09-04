@@ -10,6 +10,19 @@ const execFileAsync = promisify(execFile);
 const repositoryRoot = resolve('.');
 const temporaryDirectories: string[] = [];
 
+async function runNpm(
+  arguments_: readonly string[],
+  options: { cwd?: string; env?: NodeJS.ProcessEnv },
+): Promise<{ stderr: string; stdout: string }> {
+  const result = await execFileAsync('npm', arguments_, {
+    ...options,
+    encoding: 'utf8',
+    shell: process.platform === 'win32',
+  });
+
+  return { stderr: String(result.stderr), stdout: String(result.stdout) };
+}
+
 async function createTemporaryDirectory(): Promise<string> {
   const directory = await mkdtemp(join(tmpdir(), 'create-spatius-app-pack-'));
   temporaryDirectories.push(directory);
@@ -28,8 +41,7 @@ describe('packed CLI', () => {
   it('runs outside the repository with its bundled template', async () => {
     const root = await createTemporaryDirectory();
     const npmCache = join(root, 'npm-cache');
-    const packOutput = await execFileAsync(
-      'npm',
+    const packOutput = await runNpm(
       ['pack', '--json', '--ignore-scripts', '--pack-destination', root],
       {
         cwd: repositoryRoot,
@@ -43,8 +55,7 @@ describe('packed CLI', () => {
     expect(filename).toBeDefined();
 
     const installation = join(root, 'installation');
-    await execFileAsync(
-      'npm',
+    await runNpm(
       [
         'install',
         '--prefix',
@@ -59,8 +70,7 @@ describe('packed CLI', () => {
       { env: { ...process.env, npm_config_cache: npmCache } },
     );
 
-    await execFileAsync(
-      'npm',
+    await runNpm(
       [
         '--prefix',
         installation,

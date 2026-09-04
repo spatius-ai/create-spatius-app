@@ -3,6 +3,7 @@ import {
   mkdtemp,
   mkdir,
   readFile,
+  realpath,
   readdir,
   rm,
   writeFile,
@@ -233,13 +234,14 @@ describe('built CLI', () => {
       root,
     );
     const output = JSON.parse(result.stdout) as Record<string, unknown>;
+    const canonicalTarget = await realpath(target);
 
     expect(result.code).toBe(3);
     expect(result.stderr).toBe('');
     expect(output).toMatchObject({
       error: {
         code: 'TARGET_NOT_EMPTY',
-        path: target,
+        path: canonicalTarget,
       },
       ok: false,
       schemaVersion: 1,
