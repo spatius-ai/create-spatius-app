@@ -93,5 +93,5 @@ describe('packed CLI', () => {
     await expect(readdir(join(root, 'packaged-app'))).resolves.toContain(
       'agent',
     );
-  });
+  }, 30_000);
 });

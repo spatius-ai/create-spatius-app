@@ -241,11 +241,13 @@ describe('built CLI', () => {
     expect(output).toMatchObject({
       error: {
         code: 'TARGET_NOT_EMPTY',
-        path: canonicalTarget,
       },
       ok: false,
       schemaVersion: 1,
     });
+    const error = output.error as { path: unknown };
+    expect(typeof error.path).toBe('string');
+    await expect(realpath(error.path as string)).resolves.toBe(canonicalTarget);
     await expect(readdir(target)).resolves.toEqual(['keep.txt']);
   });
 
