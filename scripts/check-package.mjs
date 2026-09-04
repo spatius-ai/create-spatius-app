@@ -13,6 +13,7 @@ try {
     ['pack', '--dry-run', '--json', '--ignore-scripts'],
     {
       env: { ...process.env, npm_config_cache: npmCache },
+      shell: process.platform === 'win32',
     },
   );
   const result = JSON.parse(stdout)[0];
