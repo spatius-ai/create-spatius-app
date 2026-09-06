@@ -1,5 +1,7 @@
 import logging
+import os
 import textwrap
+from pathlib import Path
 
 from dotenv import load_dotenv
 from livekit import rtc
@@ -41,6 +43,14 @@ class Assistant(Agent):
 
 
 server = AgentServer()
+
+
+@server.on("worker_registered")
+def report_dev_ready(_worker_id: str, _server_info: object) -> None:
+    # Only the root dev supervisor supplies this per-run path. Registration,
+    # not process launch or the local health endpoint, releases web startup.
+    if ready_file := os.environ.get("SPATIUS_DEV_READY_FILE"):
+        Path(ready_file).touch()
 
 
 @server.rtc_session(agent_name="spatius-agent")
