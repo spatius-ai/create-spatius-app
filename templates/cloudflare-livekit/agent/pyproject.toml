@@ -5,7 +5,7 @@ description = "A LiveKit voice agent with a Spatius avatar"
 readme = "README.md"
 requires-python = ">=3.11,<3.15"
 dependencies = [
-  "livekit-agents[spatius]~=1.7.1",
+  "livekit-agents[spatius]~=1.8.0",
   "livekit-plugins-noise-cancellation~=0.2.6",
   "python-dotenv>=1.2.1,<2",
 ]
