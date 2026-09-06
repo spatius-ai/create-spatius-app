@@ -15,7 +15,19 @@ const temporaryDirectories: string[] = [];
 async function createProject(): Promise<string> {
   const directory = await mkdtemp(join(tmpdir(), 'spatius-configure-test-'));
   temporaryDirectories.push(directory);
-  await mkdir(join(directory, 'agent'));
+  await mkdir(join(directory, 'agent/src'), { recursive: true });
+  await mkdir(join(directory, 'worker'));
+  for (const [source, destination] of [
+    ['dev.vars.example', '.dev.vars.example'],
+    ['wrangler.jsonc', 'wrangler.jsonc'],
+    ['agent/src/agent.py', 'agent/src/agent.py'],
+    ['worker/index.test.ts', 'worker/index.test.ts'],
+  ]) {
+    await writeFile(
+      join(directory, destination!),
+      await readFile(join('templates/cloudflare-livekit', source!), 'utf8'),
+    );
+  }
   await writeFile(
     join(directory, 'package.json'),
     `${JSON.stringify({
@@ -56,6 +68,37 @@ afterEach(async () => {
 });
 
 describe('generated template configuration', () => {
+  it('assigns distinct names and synchronizes registration, dispatch, and fixtures', async () => {
+    const names: string[] = [];
+    for (let index = 0; index < 2; index++) {
+      const project = await createProject();
+      await writeFile(join(project, 'agent/README.md'), 'Agent: spatius-agent');
+      await configureGeneratedTemplate(project, {
+        packageManagers: createPackageManagers(),
+      });
+      const example = await readFile(
+        join(project, '.dev.vars.example'),
+        'utf8',
+      );
+      const name = example.match(
+        /LIVEKIT_AGENT_NAME=(spatius-agent-[a-f0-9-]+)/u,
+      )?.[1];
+      expect(name).toMatch(
+        /^spatius-agent-[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/u,
+      );
+      names.push(name!);
+      for (const path of [
+        'wrangler.jsonc',
+        'agent/src/agent.py',
+        'agent/README.md',
+        'worker/index.test.ts',
+      ]) {
+        expect(await readFile(join(project, path), 'utf8')).toContain(name);
+      }
+    }
+    expect(names[0]).not.toBe(names[1]);
+  });
+
   it.each([
     ['pnpm', 'uv'],
     ['pnpm', 'pip'],
