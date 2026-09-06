@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ConnectionState, Track } from 'livekit-client';
 import {
   useAgent,
@@ -94,17 +94,20 @@ function ConversationContent({
   const { isMicrophoneEnabled, microphoneTrack } = useLocalParticipant({
     room: attempt.room,
   });
+  // LiveKit rebuilds its device observer when this callback changes. An inline
+  // callback would reset the device state on every render and cause a loop.
+  const onDeviceError = useCallback(() => {
+    if (!attempt.abort.signal.aborted)
+      setMediaError(
+        'Could not use that microphone. Choose another device or keep typing.',
+      );
+  }, [attempt]);
   const { devices, activeDeviceId, setActiveMediaDevice } =
     useMediaDeviceSelect({
       room: attempt.room,
       kind: 'audioinput',
       requestPermissions: false,
-      onError: () => {
-        if (!attempt.abort.signal.aborted)
-          setMediaError(
-            'Could not use that microphone. Choose another device or keep typing.',
-          );
-      },
+      onError: onDeviceError,
     });
   const toggleMicrophone = async (enabled: boolean) => {
     if (mediaBusy.current || attempt.abort.signal.aborted) return;

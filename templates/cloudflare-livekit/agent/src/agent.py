@@ -2,6 +2,7 @@ import logging
 import textwrap
 
 from dotenv import load_dotenv
+from livekit import rtc
 from livekit.agents import (
     Agent,
     AgentServer,
@@ -81,6 +82,10 @@ async def spatius_agent(ctx: JobContext) -> None:
         ),
     )
     logger.info("Spatius voice session started")
+    # The avatar service can join before the browser has loaded its renderer.
+    # Wait for a human/browser participant, not another agent or avatar worker.
+    # This also returns immediately if the browser joined during startup.
+    await ctx.wait_for_participant(kind=rtc.ParticipantKind.PARTICIPANT_KIND_STANDARD)
     # Use the normal speech pipeline so the avatar and transcript stay in sync.
     await session.say(
         "Hi! I'm here to help. What would you like to talk about?",

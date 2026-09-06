@@ -383,14 +383,6 @@ export async function runCredentialSetup({
     liveKit,
     spatius,
   });
-  const confirmed = await prompts.confirm(
-    `Save the local configuration for LiveKit ${credentials.liveKit.url}, Spatius app ${credentials.spatius.appId}, avatar ${credentials.spatius.avatarId}, and ${voice.label}? Secret values remain hidden.`,
-    true,
-  );
-  if (!confirmed) {
-    throw new PromptCancelledError('Credential setup was cancelled.');
-  }
-
   const examples = await readExamples(targetDirectory);
   const rendered = buildCredentialFileContents(state, examples, credentials);
   await writeFiles(targetDirectory, rendered);

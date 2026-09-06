@@ -24,8 +24,10 @@ function setup(overrides: Partial<AttemptDependencies> = {}) {
   const stop = vi.fn();
   const microphone = vi.fn().mockResolvedValue({ track: { stop } });
   const disconnect = vi.fn().mockResolvedValue(undefined);
+  const prepareConnection = vi.fn().mockResolvedValue(undefined);
   const room = {
     disconnect,
+    prepareConnection,
     localParticipant: { setMicrophoneEnabled: microphone },
   } as unknown as Room;
   const dispose = vi.fn().mockResolvedValue(undefined);
@@ -41,6 +43,7 @@ function setup(overrides: Partial<AttemptDependencies> = {}) {
     room,
     dispose,
     disconnect,
+    prepareConnection,
     microphone,
     stop,
   };
@@ -48,8 +51,9 @@ function setup(overrides: Partial<AttemptDependencies> = {}) {
 const container = {} as HTMLElement;
 describe('per-attempt lifecycle', () => {
   it('has no bootstrap side effects until prepare, and literal fetch never repeats the POST', async () => {
-    const { attempt, deps, room } = setup();
+    const { attempt, deps, room, prepareConnection } = setup();
     expect(deps.request).not.toHaveBeenCalled();
+    expect(prepareConnection).not.toHaveBeenCalled();
     const prepared = await attempt.prepare(container, vi.fn());
     expect(deps.attach).toHaveBeenCalledWith(
       container,
@@ -61,11 +65,17 @@ describe('per-attempt lifecycle', () => {
     await prepared.tokenSource.fetch();
     await prepared.tokenSource.fetch();
     expect(deps.request).toHaveBeenCalledTimes(1);
+    expect(prepareConnection).toHaveBeenCalledExactlyOnceWith(
+      credentials.server_url,
+      credentials.participant_token,
+    );
     await attempt.dispose();
   });
   it('aborts the request and never attaches when a cancelled request resolves late', async () => {
     const request = deferred<VoiceSession>();
-    const { attempt, deps } = setup({ request: () => request.promise });
+    const { attempt, deps, prepareConnection } = setup({
+      request: () => request.promise,
+    });
     const pending = attempt.prepare(container, vi.fn());
     const rejected = expect(pending).rejects.toMatchObject({
       name: 'AbortError',
@@ -74,7 +84,26 @@ describe('per-attempt lifecycle', () => {
     request.resolve(credentials);
     await rejected;
     expect(deps.attach).not.toHaveBeenCalled();
+    expect(prepareConnection).not.toHaveBeenCalled();
     expect(attempt.abort.signal.aborted).toBe(true);
+  });
+  it('loads the avatar without waiting for connection warmup', async () => {
+    const { attempt, prepareConnection, deps } = setup();
+    const warmup = deferred<void>();
+    prepareConnection.mockReturnValue(warmup.promise);
+    await attempt.prepare(container, vi.fn());
+    expect(deps.attach).toHaveBeenCalledOnce();
+    await attempt.dispose();
+    // Late warmup completion cannot join the room or restart a cancelled attempt.
+    warmup.resolve();
+    expect(attempt.abort.signal.aborted).toBe(true);
+  });
+  it('continues startup if optional connection warmup fails', async () => {
+    const { attempt, prepareConnection, deps } = setup();
+    prepareConnection.mockRejectedValue(new Error('offline'));
+    await attempt.prepare(container, vi.fn());
+    expect(deps.attach).toHaveBeenCalledOnce();
+    await attempt.dispose();
   });
   it('cleans an avatar that becomes ready after cancellation and disposes the room once', async () => {
     const attach = deferred<{ dispose: () => Promise<void> }>();

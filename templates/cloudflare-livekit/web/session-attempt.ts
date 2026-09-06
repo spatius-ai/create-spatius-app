@@ -42,6 +42,12 @@ export class SessionAttempt {
     const { signal } = this.abort;
     const credentials = await this.deps.request(signal);
     signal.throwIfAborted();
+    // Warm LiveKit's region selection and connection while the avatar loads.
+    // This does not join the room or acquire media; attach must still finish
+    // before useSession starts the connection. A failed warmup is non-fatal.
+    void this.room
+      .prepareConnection(credentials.server_url, credentials.participant_token)
+      .catch(() => undefined);
     this.stage = 'avatar';
     const avatar = await this.deps.attach(
       container,

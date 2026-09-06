@@ -13,6 +13,7 @@ import {
 } from './errors.js';
 import { resolveProjectDirectoryInput } from './input.js';
 import { installProjectDependencies } from './install.js';
+import { formatNextSteps } from './next-steps.js';
 import {
   resolveCredentialSetupDecision,
   resolveInteractionMode,
@@ -500,9 +501,15 @@ async function runCreateCommand(
       theme.highlight(
         options.dryRun
           ? 'Dry run complete. No files or dependencies were changed.'
-          : `Ready. Next: ${nextSteps.join(' · ')}`,
+          : 'Ready!',
       ),
     );
+    if (!options.dryRun) {
+      // End Clack's decoration before printing a directly copyable shell block.
+      process.stdout.write(
+        `Next steps:\n\n${formatNextSteps(targetDirectory, nextSteps)}\n\n`,
+      );
+    }
   } finally {
     prompts.close();
   }

@@ -80,7 +80,34 @@ describe('Spatius loopback callback server', () => {
     );
 
     expect(response.status).toBe(200);
-    expect(await response.text()).toContain('Authorization complete');
+    const html = await response.text();
+    expect(html).toContain('Authorization complete');
+    expect(html).toContain('Continue in your terminal');
+    expect(html).not.toContain('create-spatius-app');
+    expect(html).not.toContain('Real-time avatars. Human connections.');
+    expect(html.match(/class="external-icon"/gu)).toHaveLength(4);
+    expect(
+      html.match(/class="link-label"><svg aria-hidden="true"/gu),
+    ).toHaveLength(4);
+    for (const href of [
+      'https://www.spatius.ai/',
+      'https://docs.spatius.ai/',
+      'https://app.spatius.ai',
+      'https://github.com/spatius-ai',
+      'https://discord.gg/9HGhZfHZh9',
+    ]) {
+      expect(html).toContain(
+        `href="${href}" target="_blank" rel="noopener noreferrer"`,
+      );
+    }
+    expect(html).not.toMatch(
+      /<script|<iframe|<img|auth_code=|auth_request_id=/u,
+    );
+    expect(response.headers.get('referrer-policy')).toBe('no-referrer');
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    expect(response.headers.get('content-security-policy')).toBe(
+      "default-src 'none'; style-src 'unsafe-inline'",
+    );
     await expect(waiting).resolves.toEqual({
       authCode: 'code',
       authRequestId: 'request',

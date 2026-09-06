@@ -340,17 +340,23 @@ describe('credential setup wizard', () => {
     expect(warnings.join('\n')).toContain('could not be revoked');
   });
 
-  it('leaves files unchanged on final cancellation or provider failure', async () => {
+  it('saves after voice selection without a final confirmation', async () => {
     const writeFiles = writeMock();
+    const prompts = new FakePrompts();
+    const confirm = vi.spyOn(prompts, 'confirm');
     await expect(
       runCredentialSetup({
         dependencies: baseDependencies({ writeFiles }),
-        prompts: new FakePrompts({ confirmations: [false] }),
+        prompts,
         targetDirectory: '/project',
       }),
-    ).rejects.toBeInstanceOf(PromptCancelledError);
-    expect(writeFiles).not.toHaveBeenCalled();
+    ).resolves.toBe('configured');
+    expect(confirm).not.toHaveBeenCalled();
+    expect(writeFiles).toHaveBeenCalledOnce();
+  });
 
+  it('leaves files unchanged on provider failure when manual fallback is declined', async () => {
+    const writeFiles = writeMock();
     await expect(
       runCredentialSetup({
         dependencies: baseDependencies({

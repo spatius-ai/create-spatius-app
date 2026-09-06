@@ -5,6 +5,7 @@ import type { AddressInfo } from 'node:net';
 import { promisify } from 'node:util';
 
 import { SecretRedactor } from './redaction.js';
+import { successPage } from './success-page.js';
 import {
   SpatiusApiClient,
   SpatiusAuthenticatedSession,
@@ -93,24 +94,6 @@ export interface SpatiusCallbackServer {
     timeoutMs: number;
   }): Promise<SpatiusCallbackResult>;
 }
-
-const successPage = `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Spatius authorization complete</title>
-    <style>
-      :root { color-scheme: light; font-family: ui-sans-serif, system-ui, sans-serif; }
-      body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #f7f5f1; color: #151131; }
-      main { max-width: 34rem; margin: 2rem; padding: 2.5rem; border: 1px solid #eeebe4; border-radius: 1.25rem; background: white; box-shadow: 0 1.25rem 4rem rgba(21, 17, 49, .10); }
-      span { color: #6363a7; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
-      h1 { margin: .75rem 0; font-size: clamp(2rem, 8vw, 3.25rem); line-height: 1; }
-      p { color: #56586c; line-height: 1.6; }
-    </style>
-  </head>
-  <body><main><span>Spatius</span><h1>Authorization complete.</h1><p>You can close this tab and return to your terminal.</p></main></body>
-</html>`;
 
 function closeServer(server: Server): Promise<void> {
   return new Promise((resolvePromise) => {
