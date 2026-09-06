@@ -36,12 +36,13 @@ async function runCli(
   currentWorkingDirectory: string,
   environment: NodeJS.ProcessEnv = {},
 ): Promise<{ stderr: string; stdout: string }> {
+  const homeDirectory = await createTemporaryDirectory();
   return execFileAsync(process.execPath, [cliPath, ...arguments_], {
     cwd: currentWorkingDirectory,
     env: {
       ...process.env,
-      HOME: currentWorkingDirectory,
-      USERPROFILE: currentWorkingDirectory,
+      HOME: homeDirectory,
+      USERPROFILE: homeDirectory,
       ...environment,
       NO_COLOR: '1',
     },
@@ -93,6 +94,7 @@ async function runSpawnedCli(
   input?: string,
   environment: NodeJS.ProcessEnv = {},
 ): Promise<{ code: number | null; stderr: string; stdout: string }> {
+  const homeDirectory = await createTemporaryDirectory();
   const preload = join(
     await createTemporaryDirectory(),
     'mock-livekit-fetch.mjs',
@@ -117,8 +119,8 @@ async function runSpawnedCli(
         cwd: currentWorkingDirectory,
         env: {
           ...process.env,
-          HOME: currentWorkingDirectory,
-          USERPROFILE: currentWorkingDirectory,
+          HOME: homeDirectory,
+          USERPROFILE: homeDirectory,
           ...environment,
           NO_COLOR: '1',
         },
