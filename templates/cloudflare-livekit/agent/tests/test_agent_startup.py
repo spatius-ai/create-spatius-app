@@ -207,5 +207,26 @@ class AgentStartupTests(unittest.IsolatedAsyncioTestCase):
         )
 
 
+class DevReadinessTests(unittest.TestCase):
+    def test_registration_writes_only_the_supervisors_ready_file(self) -> None:
+        with (
+            patch.dict(
+                "os.environ", {"SPATIUS_DEV_READY_FILE": "/tmp/test-agent-ready"}
+            ),
+            patch.object(agent_module, "Path") as path,
+        ):
+            agent_module.server.emit("worker_registered", "worker-test", object())
+        path.assert_called_once_with("/tmp/test-agent-ready")
+        path.return_value.touch.assert_called_once_with()
+
+    def test_standalone_agent_does_not_write_a_ready_file(self) -> None:
+        with (
+            patch.dict("os.environ", {}, clear=True),
+            patch.object(agent_module, "Path") as path,
+        ):
+            agent_module.server.emit("worker_registered", "worker-test", object())
+        path.assert_not_called()
+
+
 if __name__ == "__main__":
     unittest.main()

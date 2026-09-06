@@ -34,4 +34,6 @@ a matching voice. This configures local development only, not deployment.
 __SPATIUS_DEV_COMMAND__
 ```
 
-This starts the frontend, Cloudflare Worker, and Python agent together.
+This starts the Python agent first, then starts the frontend and Cloudflare
+Worker once the agent has registered with LiveKit. If registration takes more
+than 60 seconds, startup stops with an error.

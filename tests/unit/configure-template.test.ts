@@ -146,7 +146,7 @@ describe('generated template configuration', () => {
         await readFile(join(project, 'package.json'), 'utf8'),
       ) as { scripts: Record<string, string> };
       expect(metadata.scripts.dev).toBe(
-        `concurrently --kill-others --names web,agent "${manager} run dev:web" "${manager} run agent:dev"`,
+        `node scripts/dev.mjs "${manager} run dev:web" "${manager} run agent:dev"`,
       );
       expect(metadata.scripts.check).toContain(`${manager} run test:dev`);
     },

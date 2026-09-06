@@ -636,7 +636,7 @@ describe('built CLI', () => {
         await readFile(join(target, 'package.json'), 'utf8'),
       ) as { scripts: Record<string, string> };
       expect(metadata.scripts.dev).toBe(
-        `concurrently --kill-others --names web,agent "${javascript} run dev:web" "${javascript} run agent:dev"`,
+        `node scripts/dev.mjs "${javascript} run dev:web" "${javascript} run agent:dev"`,
       );
       expect(metadata.scripts['agent:dev']).toBe('node scripts/dev-agent.mjs');
       expect(metadata.scripts['dev:web']).toBe('node scripts/dev-web.mjs');

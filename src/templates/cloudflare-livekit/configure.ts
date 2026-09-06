@@ -167,7 +167,7 @@ export async function configureGeneratedTemplate(
     .map(run)
     .join(' && ');
   metadata.scripts.deploy = `${run('build')} && wrangler deploy`;
-  metadata.scripts.dev = `concurrently --kill-others --names web,agent "${run('dev:web')}" "${run('agent:dev')}"`;
+  metadata.scripts.dev = `node scripts/dev.mjs "${run('dev:web')}" "${run('agent:dev')}"`;
 
   if (
     javascript.name === 'npm' &&

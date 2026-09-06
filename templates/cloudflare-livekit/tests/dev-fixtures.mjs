@@ -25,7 +25,7 @@ export const credentials = {
 };
 
 const fakeRuntime = `
-import { appendFileSync, existsSync } from 'node:fs';
+import { appendFileSync, existsSync, writeFileSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 const role = process.argv[2];
 const args = process.argv.slice(3);
@@ -57,6 +57,17 @@ if (role === 'lk' && args[0] === '--version') {
 } else if (role === 'grandchild') {
   hold(); ready();
 } else {
+  if (role !== 'web' && process.env.SPATIUS_DEV_READY_FILE && process.env.DEV_TEST_RUNTIME_HOLD === '1') {
+    const register = () => {
+      event('registered');
+      writeFileSync(process.env.SPATIUS_DEV_READY_FILE, '');
+    };
+    if (process.env.DEV_TEST_REGISTER) {
+      const poll = setInterval(() => {
+        if (existsSync(process.env.DEV_TEST_REGISTER)) { clearInterval(poll); register(); }
+      }, 20);
+    } else register();
+  }
   if (process.env.DEV_TEST_GRANDCHILD === '1') {
     spawnGrandchild();
   }

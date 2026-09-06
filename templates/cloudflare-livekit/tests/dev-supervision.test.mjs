@@ -37,7 +37,7 @@ async function supervise(f, extraEnv) {
   const sourcePackage = JSON.parse(
     await readFile(join(templateDirectory, 'package.json'), 'utf8'),
   );
-  // Exercise the production script composition with npm, available alongside
+  // Exercise the production startup gate and supervisor with npm, available alongside
   // Node in both generated projects and root CI. Only PM selection changes.
   const scripts = Object.fromEntries(
     ['dev', 'dev:web', 'agent:dev'].map((name) => [
@@ -102,7 +102,7 @@ for (const [name, side, code] of [
   ['agent fails', 'agent', '29'],
 ]) {
   test(
-    `real concurrently: ${name} stops its sibling and all grandchildren`,
+    `root dev supervisor: ${name} stops its sibling and all grandchildren`,
     { timeout: 15000 },
     async (t) => {
       const f = await fixture(t);
@@ -128,12 +128,14 @@ for (const [name, side, code] of [
       assert.match(result.output, /SIGTERM/);
       assertNoCredentials(result.output);
       await assertStopped(events.map(({ pid }) => pid));
+      // A bounded CLI probe may select Python fallback on a busy machine.
+      // Supervision must launch exactly one runtime through either supported path.
       assert.equal(
         (await readEvents(f.events)).filter(
           ({ role, args, type }) =>
-            role === 'lk' &&
+            ['lk', 'uv', 'python'].includes(role) &&
             type === 'invoked' &&
-            args.at(-1) === 'src/agent.py',
+            args.includes('src/agent.py'),
         ).length,
         1,
       );
@@ -142,7 +144,7 @@ for (const [name, side, code] of [
 }
 
 test(
-  'real concurrently: Ctrl+C stops both services and their grandchildren',
+  'root dev supervisor: Ctrl+C stops both services and their grandchildren',
   {
     timeout: 15000,
     skip:
@@ -199,5 +201,106 @@ test(
     const after = await readEvents(f.events);
     assert.equal(after.filter(({ role }) => role === 'uv').length, 1);
     assertNoCredentials(result.output);
+  },
+);
+
+for (const fallback of [false, true]) {
+  test(
+    `web waits for registration (${fallback ? 'Python fallback' : 'lk'})`,
+    { timeout: 15000 },
+    async (t) => {
+      const f = await fixture(t, { uv: true });
+      const registration = join(f.root, 'register');
+      const run = await supervise(f, {
+        DEV_TEST_RUNTIME_HOLD: '1',
+        DEV_TEST_REGISTER: registration,
+        DEV_TEST_WEB_EXIT: '0',
+        ...(fallback ? { DEV_TEST_VERSION: 'lk version 2.17.0' } : {}),
+      });
+      const before = await waitForEvents(f.events, (events) =>
+        events.some(
+          ({ role, type }) =>
+            role === (fallback ? 'uv' : 'lk') && type === 'ready',
+        ),
+      );
+      await delay(200);
+      assert.ok(
+        !(await readEvents(f.events)).some(({ role }) => role === 'web'),
+      );
+      const readyPath = before.find(({ env }) => env.SPATIUS_DEV_READY_FILE)
+        ?.env.SPATIUS_DEV_READY_FILE;
+      assert.ok(readyPath);
+      await writeFile(registration, 'register');
+      const after = await waitForEvents(f.events, (events) =>
+        events.some(({ role, type }) => role === 'web' && type === 'ready'),
+      );
+      assert.ok(
+        after.findIndex(({ type }) => type === 'registered') <
+          after.findIndex(({ role }) => role === 'web'),
+      );
+      await writeFile(f.env.DEV_TEST_RELEASE, 'exit');
+      const result = await run.done;
+      assert.match(result.output, /LiveKit agent registered/);
+      assertNoCredentials(result.output);
+      await assert.rejects(readFile(readyPath), { code: 'ENOENT' });
+      await assertStopped(after.map(({ pid }) => pid));
+    },
+  );
+}
+
+test(
+  'agent failure before registration never starts web',
+  { timeout: 15000 },
+  async (t) => {
+    const f = await fixture(t);
+    const run = await supervise(f, { DEV_TEST_RUNTIME_EXIT: '29' });
+    const result = await run.done;
+    assert.notEqual(result.code, 0);
+    assert.ok(!(await readEvents(f.events)).some(({ role }) => role === 'web'));
+    assertNoCredentials(result.output);
+  },
+);
+
+test(
+  'registration timeout stops the agent without starting web',
+  { timeout: 15000 },
+  async (t) => {
+    const f = await fixture(t);
+    // Accelerate only the copied fixture's deadline; exercise the real web gate.
+    const path = join(f.root, 'scripts', 'wait-for-agent.mjs');
+    await writeFile(
+      path,
+      (await readFile(path, 'utf8')).replace('60_000', '1500'),
+    );
+    const run = await supervise(f, {
+      DEV_TEST_RUNTIME_HOLD: '1',
+      DEV_TEST_REGISTER: join(f.root, 'never-register'),
+    });
+    const result = await run.done;
+    assert.notEqual(result.code, 0);
+    assert.match(result.output, /LiveKit agent did not register/);
+    const events = await readEvents(f.events);
+    assert.ok(!events.some(({ role }) => role === 'web'));
+    await assertStopped(events.map(({ pid }) => pid));
+    assertNoCredentials(result.output);
+  },
+);
+
+test(
+  'Ctrl+C while waiting for registration stops the agent without starting web',
+  { timeout: 15000, skip: windows },
+  async (t) => {
+    const f = await fixture(t);
+    const run = await supervise(f, {
+      DEV_TEST_RUNTIME_HOLD: '1',
+      DEV_TEST_REGISTER: join(f.root, 'never-register'),
+    });
+    const events = await waitForEvents(f.events, (events) =>
+      events.some(({ role, type }) => role === 'lk' && type === 'ready'),
+    );
+    process.kill(-run.child.pid, 'SIGINT');
+    await run.done;
+    assert.ok(!(await readEvents(f.events)).some(({ role }) => role === 'web'));
+    await assertStopped(events.map(({ pid }) => pid));
   },
 );
