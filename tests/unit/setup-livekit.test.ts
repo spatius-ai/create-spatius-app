@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { describe, expect, it, vi } from 'vitest';
+import { PromptCancelledError } from '../../src/errors.js';
 
 import {
   createLiveKitEnvArguments,
@@ -114,6 +115,21 @@ describe('LiveKit credential extraction', () => {
     await expect(access(roots[0]!)).rejects.toMatchObject({ code: 'ENOENT' });
   });
 
+  it('preserves cancellation and removes temporary credentials', async () => {
+    let directory = '';
+    await expect(
+      loadLiveKitCredentialsWithCli({
+        runner: runner({
+          interactive: async (_command, args) => {
+            directory = args.at(-1)!;
+            throw new PromptCancelledError();
+          },
+        }),
+      }),
+    ).rejects.toBeInstanceOf(PromptCancelledError);
+    await expect(access(directory)).rejects.toMatchObject({ code: 'ENOENT' });
+  });
+
   it('rejects malformed or placeholder output and still cleans up', async () => {
     let directory = '';
     await expect(
@@ -208,6 +224,13 @@ describe('default command runner', () => {
           { cwd },
         ),
       ).rejects.toThrow(/did not complete/u);
+      await expect(
+        defaultLiveKitCommandRunner.interactive(
+          process.execPath,
+          ['-e', 'process.exit(130)'],
+          { cwd },
+        ),
+      ).rejects.toBeInstanceOf(PromptCancelledError);
       await expect(
         defaultLiveKitCommandRunner.interactive(
           'create-spatius-app-command-that-does-not-exist',

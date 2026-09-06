@@ -15,6 +15,9 @@ npx create-spatius-app my-app
 
 Follow the prompts to choose package managers, install dependencies, and
 configure your LiveKit and Spatius credentials.
+If LiveKit CLI is missing, setup offers to install it using Homebrew on macOS,
+WinGet on Windows, or LiveKit's Linux installer. You can also enter credentials
+manually or finish setup later.
 
 Then start the app with your chosen package manager:
 

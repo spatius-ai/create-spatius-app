@@ -21,6 +21,12 @@ import {
   probeLiveKitCli,
   type LiveKitCliProbe,
 } from './livekit.js';
+import {
+  authenticateLiveKitCli,
+  installLiveKitCli,
+  LIVEKIT_INSTALL_GUIDE,
+  planLiveKitInstall,
+} from './livekit-install.js';
 import { assertSpatiusProject } from './project.js';
 import { SecretRedactor } from './redaction.js';
 import { loginToSpatius, type SpatiusCallbackServer } from './spatius-auth.js';
@@ -35,6 +41,9 @@ import { selectSpatiusResources } from './spatius-resources.js';
 export type CredentialSetupResult = 'configured' | 'unchanged';
 
 export interface CredentialSetupDependencies {
+  authenticateLiveKit?: () => Promise<void>;
+  installLiveKit?: typeof installLiveKitCli;
+  planLiveKitInstall?: typeof planLiveKitInstall;
   createSpatiusClient?: () => SpatiusApiClient;
   loadLiveKitCredentials?: () => Promise<LiveKitCredentials>;
   loginToSpatius?: (options: {
@@ -84,59 +93,135 @@ async function collectManualLiveKitCredentials(
 async function collectLiveKitCredentials(
   prompts: SetupPrompts,
   dependencies: Required<
-    Pick<CredentialSetupDependencies, 'loadLiveKitCredentials' | 'probeLiveKit'>
+    Pick<
+      CredentialSetupDependencies,
+      | 'loadLiveKitCredentials'
+      | 'probeLiveKit'
+      | 'planLiveKitInstall'
+      | 'installLiveKit'
+      | 'authenticateLiveKit'
+    >
   >,
   onStatus: (message: string) => void,
   onWarning: (message: string) => void,
-): Promise<LiveKitCredentials> {
-  const probe = await dependencies.probeLiveKit();
-  if (!probe.available) {
-    onWarning(
-      probe.reason === 'incompatible'
-        ? 'The installed LiveKit CLI does not support `lk app env`; using secure manual entry.'
-        : 'LiveKit CLI was not found; using secure manual entry.',
-    );
-    return collectManualLiveKitCredentials(prompts);
-  }
-
-  const source = await prompts.choose(
-    'How should LiveKit credentials be configured?',
-    [
-      {
-        hint:
-          probe.version === undefined
-            ? 'Recommended; uses `lk app env`'
-            : `Recommended; lk ${probe.version}`,
-        label: 'Use the LiveKit CLI',
-        value: 'cli',
-      },
-      {
-        hint: 'Values are entered with secret masking',
-        label: 'Enter credentials manually',
-        value: 'manual',
-      },
-    ],
-    'cli',
-  );
-  if (source === 'manual') {
-    return collectManualLiveKitCredentials(prompts);
-  }
-
-  try {
-    onStatus('Starting the LiveKit project credential flow…');
-    return await dependencies.loadLiveKitCredentials();
-  } catch {
-    onWarning(
-      'The LiveKit CLI flow did not complete or returned invalid credentials.',
-    );
-    const useManual = await prompts.confirm(
-      'Enter LiveKit credentials manually instead?',
-      true,
-    );
-    if (!useManual) {
-      throw new PromptCancelledError('Credential setup was cancelled.');
+): Promise<LiveKitCredentials | undefined> {
+  let probe = await dependencies.probeLiveKit();
+  let useCli = false;
+  while (true) {
+    if (!probe.available) {
+      const update = probe.reason === 'incompatible';
+      onWarning(
+        update
+          ? 'The installed LiveKit CLI needs an update to support `lk app env`.'
+          : 'LiveKit CLI was not found on PATH. It is needed for browser-based setup.',
+      );
+      const plan = await dependencies.planLiveKitInstall(update);
+      onStatus(
+        plan === undefined
+          ? `Install or update LiveKit CLI, then check again: ${LIVEKIT_INSTALL_GUIDE}`
+          : `${update ? 'Update' : 'Install'} command: ${plan.displayCommand}`,
+      );
+      const action = await prompts.choose(
+        'Connect your LiveKit project',
+        [
+          ...(plan === undefined
+            ? []
+            : [
+                {
+                  label: `${update ? 'Update' : 'Install'} LiveKit CLI and connect`,
+                  value: 'install',
+                  hint: 'Recommended; runs the command shown above',
+                },
+              ]),
+          { label: "I've installed it — check again", value: 'retry' },
+          { label: 'Enter credentials manually', value: 'manual' },
+          { label: 'Set up later', value: 'skip' },
+        ],
+        plan === undefined ? 'manual' : 'install',
+      );
+      if (action === 'skip') return undefined;
+      if (action === 'manual') return collectManualLiveKitCredentials(prompts);
+      if (action === 'install' && plan !== undefined) {
+        try {
+          onStatus(`${update ? 'Updating' : 'Installing'} LiveKit CLI…`);
+          await dependencies.installLiveKit(plan);
+        } catch (error) {
+          if (error instanceof PromptCancelledError) throw error;
+          onWarning(
+            'LiveKit CLI installation did not complete. Retry, enter credentials manually, or set up later.',
+          );
+          continue;
+        }
+      }
+      probe = await dependencies.probeLiveKit();
+      if (!probe.available) {
+        onWarning(
+          'A compatible lk is still unavailable in this terminal. If installation changed PATH, open a new terminal and run create-spatius-app setup . --interactive from your project.',
+        );
+        continue;
+      }
+      onStatus('LiveKit CLI is ready.');
+      useCli = true;
     }
-    return collectManualLiveKitCredentials(prompts);
+
+    const source = useCli
+      ? 'cli'
+      : await prompts.choose(
+          'How should LiveKit credentials be configured?',
+          [
+            {
+              hint:
+                probe.version === undefined
+                  ? 'Recommended; uses `lk app env`'
+                  : `Recommended; lk ${probe.version}`,
+              label: 'Use the LiveKit CLI',
+              value: 'cli',
+            },
+            {
+              hint: 'Opens LiveKit in your browser using `lk cloud auth`',
+              label: 'Connect another LiveKit project',
+              value: 'connect',
+            },
+            {
+              hint: 'Values are entered with secret masking',
+              label: 'Enter credentials manually',
+              value: 'manual',
+            },
+            { label: 'Set up later', value: 'skip' },
+          ],
+          'cli',
+        );
+    if (source === 'skip') return undefined;
+    if (source === 'manual') return collectManualLiveKitCredentials(prompts);
+    try {
+      if (source === 'connect') {
+        onStatus(
+          'Opening LiveKit in your browser. Sign in and select a project.',
+        );
+        await dependencies.authenticateLiveKit();
+      }
+      onStatus(
+        'Starting the LiveKit project credential flow… Follow the LiveKit prompts to select a linked project or sign in through your browser.',
+      );
+      return await dependencies.loadLiveKitCredentials();
+    } catch (error) {
+      if (error instanceof PromptCancelledError) throw error;
+      onWarning(
+        'The LiveKit CLI flow did not complete or returned invalid credentials.',
+      );
+      const action = await prompts.choose(
+        'How should LiveKit setup continue?',
+        [
+          { label: 'Retry LiveKit connection', value: 'retry' },
+          { label: 'Enter credentials manually', value: 'manual' },
+          { label: 'Set up later', value: 'skip' },
+        ],
+        'manual',
+      );
+      if (action === 'skip') return undefined;
+      if (action === 'manual') return collectManualLiveKitCredentials(prompts);
+      useCli = false;
+    }
   }
 }
 
@@ -315,6 +400,10 @@ export async function runCredentialSetup({
   const readExamples = dependencies.readExamples ?? readCredentialExamples;
   const writeFiles = dependencies.writeFiles ?? writeCredentialFilesAtomically;
   const setupDependencies = {
+    authenticateLiveKit:
+      dependencies.authenticateLiveKit ?? authenticateLiveKitCli,
+    installLiveKit: dependencies.installLiveKit ?? installLiveKitCli,
+    planLiveKitInstall: dependencies.planLiveKitInstall ?? planLiveKitInstall,
     createSpatiusClient:
       dependencies.createSpatiusClient ?? (() => defaultClient(onDiagnostic)),
     loadLiveKitCredentials:
@@ -351,6 +440,12 @@ export async function runCredentialSetup({
     onStatus,
     onWarning,
   );
+  if (liveKit === undefined) {
+    onStatus(
+      'Credential setup deferred. Run create-spatius-app setup . --interactive from your project when ready.',
+    );
+    return 'unchanged';
+  }
   redactor.add(liveKit.apiKey, liveKit.apiSecret);
   const spatius = await collectSpatiusCredentials(
     prompts,

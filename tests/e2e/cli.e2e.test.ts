@@ -1027,6 +1027,79 @@ describe('built CLI', () => {
     }
   }, 15_000);
 
+  it('offers installation guidance and defers missing-CLI setup without writing credentials', async () => {
+    const root = await createTemporaryDirectory();
+    await runCreateCli(['deferred-app', '--yes'], root);
+    const target = join(root, 'deferred-app');
+    const fakePath = await createFakeManagerPath(root);
+    const result = await runSpawnedCli(
+      ['setup', '--interactive'],
+      target,
+      'skip\n',
+      {
+        AI_AGENT: 'codex',
+        CI: '',
+        NODE_ENV: 'test',
+        CREATE_SPATIUS_APP_TEST_INTERACTIVE: '1',
+        PATH: fakePath,
+      },
+    );
+    expect(result.code, result.stderr).toBe(0);
+    expect(result.stdout + result.stderr).toContain(
+      'LiveKit CLI was not found',
+    );
+    expect(result.stdout).toContain('https://docs.livekit.io/');
+    expect(result.stdout).toContain('Credential setup deferred');
+    expect(await generatedFiles(target)).not.toContain('.dev.vars');
+    expect(await generatedFiles(target)).not.toContain('agent/.env.local');
+  });
+
+  it.skipIf(process.platform === 'win32')(
+    'installs a missing CLI through the wizard and immediately extracts credentials',
+    async () => {
+      const root = await createTemporaryDirectory();
+      await runCreateCli(['install-app', '--yes'], root);
+      const target = join(root, 'install-app');
+      const fakePath = await createFakeManagerPath(root);
+      const stagedPath = join(root, 'staged');
+      await mkdir(stagedPath);
+      await addFakeLiveKitCli(stagedPath);
+      const installer = process.platform === 'darwin' ? 'brew' : 'bash';
+      const installerPath = join(fakePath, installer);
+      await writeFile(
+        installerPath,
+        `#!/bin/sh
+if [ "$1" = "--version" ]; then echo 1.0; exit 0; fi
+/bin/cp "$LK_TEST_STAGED/lk" "$LK_TEST_BIN/lk"
+`,
+      );
+      await chmod(installerPath, 0o755);
+      await createFakeExecutable(fakePath, 'curl', '8.0');
+      const result = await runSpawnedCli(
+        ['setup', '--interactive'],
+        target,
+        'install\nmanual\nspatius-key\napp-id\navatar-id\nfeminine\n',
+        {
+          AI_AGENT: 'codex',
+          CI: '',
+          NODE_ENV: 'test',
+          CREATE_SPATIUS_APP_TEST_INTERACTIVE: '1',
+          PATH: fakePath,
+          LK_TEST_STAGED: stagedPath,
+          LK_TEST_BIN: fakePath,
+        },
+      );
+      expect(result.code, result.stderr).toBe(0);
+      expect(result.stdout).toContain('Install command:');
+      expect(result.stdout).toContain('LiveKit CLI is ready');
+      const worker = await readFile(join(target, '.dev.vars'), 'utf8');
+      expect(worker).toContain('LIVEKIT_URL="wss://e2e.livekit.cloud"');
+      expect(result.stdout + result.stderr).not.toContain(
+        'distinctive-livekit-secret',
+      );
+    },
+  );
+
   it('standalone setup rejects unrelated directories before reading credentials', async () => {
     const root = await createTemporaryDirectory();
     const unrelated = await runSpawnedCli(

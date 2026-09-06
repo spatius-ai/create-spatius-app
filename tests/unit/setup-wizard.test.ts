@@ -44,6 +44,9 @@ function baseDependencies(
 ): CredentialSetupDependencies {
   const session = fakeSession();
   return {
+    authenticateLiveKit: async () => undefined,
+    installLiveKit: async () => undefined,
+    planLiveKitInstall: async () => undefined,
     createSpatiusClient: () => ({}) as never,
     loadLiveKitCredentials: async () => ({
       apiKey: 'livekit-key-secret',
@@ -197,7 +200,7 @@ describe('credential setup wizard', () => {
   it('falls back to fully masked manual entry when provider CLIs are unavailable', async () => {
     const writeFiles = writeMock();
     const prompts = new FakePrompts({
-      choices: ['manual', 'masculine'],
+      choices: ['manual', 'manual', 'masculine'],
       inputs: ['https://demo.livekit.cloud'],
       passwords: [
         'manual-livekit-key',
@@ -246,10 +249,10 @@ describe('credential setup wizard', () => {
     );
   });
 
-  it('offers manual LiveKit entry after CLI cancellation or malformed output', async () => {
+  it('offers manual LiveKit entry after CLI failure or malformed output', async () => {
     const writeFiles = writeMock();
     const prompts = new FakePrompts({
-      choices: ['cli', 'manual'],
+      choices: ['cli', 'manual', 'manual'],
       confirmations: [true, true],
       inputs: ['wss://fallback.livekit.cloud'],
       passwords: [
@@ -355,23 +358,209 @@ describe('credential setup wizard', () => {
     expect(writeFiles).toHaveBeenCalledOnce();
   });
 
-  it('leaves files unchanged on provider failure when manual fallback is declined', async () => {
+  it('leaves files unchanged when setup is deferred after a CLI failure', async () => {
     const writeFiles = writeMock();
     await expect(
       runCredentialSetup({
         dependencies: baseDependencies({
-          loadLiveKitCredentials: async () =>
-            Promise.reject(new Error('CLI failed')),
+          loadLiveKitCredentials: async () => {
+            throw new Error('failed');
+          },
           writeFiles,
         }),
-        prompts: new FakePrompts({
-          choices: ['cli'],
-          confirmations: [false],
-        }),
+        prompts: new FakePrompts({ choices: ['cli', 'skip'] }),
         targetDirectory: '/project',
       }),
-    ).rejects.toBeInstanceOf(PromptCancelledError);
+    ).resolves.toBe('unchanged');
     expect(writeFiles).not.toHaveBeenCalled();
+  });
+
+  it.each(['missing', 'incompatible'] as const)(
+    'installs or updates a %s CLI and continues without another source prompt',
+    async (reason) => {
+      const events: string[] = [];
+      const plan = {
+        command: 'installer',
+        args: [],
+        displayCommand: 'installer livekit',
+      };
+      const planInstall = vi.fn(async () => plan);
+      const probeLiveKit = vi
+        .fn()
+        .mockResolvedValueOnce({ available: false, reason })
+        .mockResolvedValue({ available: true });
+      const prompts = new FakePrompts({ choices: ['install', 'browser'] });
+      await expect(
+        runCredentialSetup({
+          dependencies: baseDependencies({
+            probeLiveKit,
+            planLiveKitInstall: planInstall,
+            installLiveKit: async (selected) => {
+              expect(selected).toBe(plan);
+              events.push('install');
+            },
+            loadLiveKitCredentials: async () => {
+              events.push('load');
+              return {
+                url: 'wss://demo.livekit.cloud',
+                apiKey: 'key',
+                apiSecret: 'secret',
+              };
+            },
+          }),
+          prompts,
+          onStatus: (message) => events.push(message),
+          targetDirectory: '/project',
+        }),
+      ).resolves.toBe('configured');
+      expect(planInstall).toHaveBeenCalledWith(reason === 'incompatible');
+      expect(
+        events.findIndex((event) => event.includes('installer livekit')),
+      ).toBeLessThan(events.indexOf('install'));
+      expect(events.indexOf('install')).toBeLessThan(events.indexOf('load'));
+      expect(probeLiveKit).toHaveBeenCalledTimes(2);
+      expect(prompts.seenOptions).toHaveLength(3);
+    },
+  );
+
+  it('rechecks an externally installed CLI without invoking an installer', async () => {
+    const installLiveKit = vi.fn();
+    await runCredentialSetup({
+      dependencies: baseDependencies({
+        probeLiveKit: vi
+          .fn()
+          .mockResolvedValueOnce({ available: false })
+          .mockResolvedValue({ available: true }),
+        installLiveKit,
+      }),
+      prompts: new FakePrompts({ choices: ['retry', 'browser'] }),
+      targetDirectory: '/project',
+    });
+    expect(installLiveKit).not.toHaveBeenCalled();
+  });
+
+  it.each([true, false])(
+    'recovers when installation fails or PATH remains unavailable (failure=%s)',
+    async (fails) => {
+      const warnings: string[] = [];
+      const writeFiles = writeMock();
+      const loadLiveKitCredentials = vi.fn();
+      await expect(
+        runCredentialSetup({
+          dependencies: baseDependencies({
+            probeLiveKit: async () => ({ available: false, reason: 'missing' }),
+            planLiveKitInstall: async () => ({
+              command: 'installer',
+              args: [],
+              displayCommand: 'installer',
+            }),
+            installLiveKit: async () => {
+              if (fails) throw new Error('failed');
+            },
+            loadLiveKitCredentials,
+            writeFiles,
+          }),
+          prompts: new FakePrompts({ choices: ['install', 'skip'] }),
+          onWarning: (message) => warnings.push(message),
+          targetDirectory: '/project',
+        }),
+      ).resolves.toBe('unchanged');
+      expect(warnings.join(' ')).toContain(
+        fails ? 'installation did not complete' : 'open a new terminal',
+      );
+      expect(loadLiveKitCredentials).not.toHaveBeenCalled();
+      expect(writeFiles).not.toHaveBeenCalled();
+    },
+  );
+
+  it('shows instructions without an install choice when no installer is available', async () => {
+    const prompts = new FakePrompts({ choices: ['skip'] });
+    const status: string[] = [];
+    await expect(
+      runCredentialSetup({
+        dependencies: baseDependencies({
+          probeLiveKit: async () => ({ available: false }),
+        }),
+        prompts,
+        onStatus: (message) => status.push(message),
+        targetDirectory: '/project',
+      }),
+    ).resolves.toBe('unchanged');
+    expect(prompts.seenOptions[0]?.map((option) => option.value)).toEqual([
+      'retry',
+      'manual',
+      'skip',
+    ]);
+    expect(status.join(' ')).toContain('https://docs.livekit.io/');
+  });
+
+  it('authenticates another project before extracting credentials and can retry', async () => {
+    const events: string[] = [];
+    const authenticateLiveKit = vi.fn(async () => {
+      events.push('auth');
+      if (events.length === 1) throw new Error('offline');
+    });
+    await runCredentialSetup({
+      dependencies: baseDependencies({
+        authenticateLiveKit,
+        loadLiveKitCredentials: async () => {
+          events.push('load');
+          return {
+            url: 'wss://demo.livekit.cloud',
+            apiKey: 'key',
+            apiSecret: 'secret',
+          };
+        },
+      }),
+      prompts: new FakePrompts({
+        choices: ['connect', 'retry', 'connect', 'browser'],
+      }),
+      targetDirectory: '/project',
+    });
+    expect(events).toEqual(['auth', 'auth', 'load']);
+  });
+
+  it.each(['install', 'cli', 'connect'])(
+    'propagates cancellation from %s without a fallback or credential write',
+    async (source) => {
+      const cancel = async () => {
+        throw new PromptCancelledError();
+      };
+      const writeFiles = writeMock();
+      const prompts = new FakePrompts({ choices: [source] });
+      await expect(
+        runCredentialSetup({
+          dependencies: baseDependencies({
+            probeLiveKit: async () => ({ available: source !== 'install' }),
+            planLiveKitInstall: async () => ({
+              command: 'installer',
+              args: [],
+              displayCommand: 'installer',
+            }),
+            installLiveKit: cancel,
+            authenticateLiveKit: cancel,
+            loadLiveKitCredentials: cancel,
+            writeFiles,
+          }),
+          prompts,
+          targetDirectory: '/project',
+        }),
+      ).rejects.toBeInstanceOf(PromptCancelledError);
+      expect(prompts.seenOptions).toHaveLength(1);
+      expect(writeFiles).not.toHaveBeenCalled();
+    },
+  );
+
+  it('can defer setup even with a compatible CLI', async () => {
+    const loadLiveKitCredentials = vi.fn();
+    await expect(
+      runCredentialSetup({
+        dependencies: baseDependencies({ loadLiveKitCredentials }),
+        prompts: new FakePrompts({ choices: ['skip'] }),
+        targetDirectory: '/project',
+      }),
+    ).resolves.toBe('unchanged');
+    expect(loadLiveKitCredentials).not.toHaveBeenCalled();
   });
 
   it('validates the project before reading credential files', async () => {
