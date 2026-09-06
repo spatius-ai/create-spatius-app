@@ -56,6 +56,42 @@ afterEach(async () => {
 });
 
 describe('generated template configuration', () => {
+  it.each([
+    ['pnpm', 'uv'],
+    ['pnpm', 'pip'],
+    ['npm', 'uv'],
+    ['npm', 'pip'],
+    ['bun', 'uv'],
+    ['bun', 'pip'],
+  ] as const)(
+    'renders the onboarding documents for %s/%s',
+    async (javascript, python) => {
+      const project = await createProject();
+      for (const path of ['README.md', 'AGENTS.md']) {
+        await writeFile(
+          join(project, path),
+          await readFile(join('templates/cloudflare-livekit', path), 'utf8'),
+        );
+      }
+      await configureGeneratedTemplate(project, {
+        packageManagers: createPackageManagers(javascript, python),
+      });
+      const readme = await readFile(join(project, 'README.md'), 'utf8');
+      const instructions = await readFile(join(project, 'AGENTS.md'), 'utf8');
+      for (const text of [readme, instructions]) {
+        expect(text).not.toMatch(/__SPATIUS_|\{\{SPATIUS_/u);
+        expect(text).toContain(`${javascript} run dev`);
+        expect(text).toContain('npx create-spatius-app setup . --interactive');
+      }
+      expect(readme).toContain(`${javascript} install`);
+      expect(instructions).toContain(`${javascript} run check`);
+      expect(instructions).toContain(`${javascript} run agent:check`);
+      expect(readme).toContain(
+        python === 'uv' ? 'uv sync' : '-m venv agent/.venv',
+      );
+    },
+  );
+
   it.each(['pnpm', 'npm', 'bun'] as const)(
     'renders the unified dev and verification scripts for %s',
     async (manager) => {

@@ -74,6 +74,7 @@ describe('packed CLI', () => {
     const filename = packResult[0]?.filename;
     expect(filename).toBeDefined();
     const packedPaths = packResult[0]!.files.map((file) => file.path);
+    expect(packedPaths.some((path) => path.startsWith('skills/'))).toBe(false);
     expect(packedPaths).toContain('templates/cloudflare-livekit/package.json');
     expect(packedPaths).toContain('dist/templates.js');
     expect(packedPaths.some((path) => path.startsWith('template/'))).toBe(
