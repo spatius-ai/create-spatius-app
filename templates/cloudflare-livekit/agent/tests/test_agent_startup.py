@@ -16,12 +16,16 @@ class AgentStartupTests(unittest.IsolatedAsyncioTestCase):
         self.events: list[str] = []
         self.connected = False
         self.room = SimpleNamespace(name="test-room")
+        self.browser_joined = asyncio.Event()
+        self.browser_joined.set()
+        self.waiting_for_browser = asyncio.Event()
         self.ctx = SimpleNamespace(
             room=self.room,
             job=SimpleNamespace(
                 metadata=json.dumps({"version": 1, "avatar": {"id": "avatar-test"}})
             ),
             connect=AsyncMock(side_effect=self.connect),
+            wait_for_participant=AsyncMock(side_effect=self.wait_for_browser),
         )
         self.session = SimpleNamespace(
             start=AsyncMock(side_effect=self.start_session),
@@ -67,15 +71,26 @@ class AgentStartupTests(unittest.IsolatedAsyncioTestCase):
         )
         self.events.append("session")
 
-    async def say_greeting(self, text, *, allow_interruptions) -> None:
+    async def wait_for_browser(self, *, kind):
+        self.assertEqual(
+            kind, agent_module.rtc.ParticipantKind.PARTICIPANT_KIND_STANDARD
+        )
         self.assertEqual(self.events, ["connect", "avatar", "session"])
+        self.waiting_for_browser.set()
+        await self.browser_joined.wait()
+        self.events.append("browser")
+
+    async def say_greeting(self, text, *, allow_interruptions) -> None:
+        self.assertEqual(self.events, ["connect", "avatar", "session", "browser"])
         self.assertTrue(allow_interruptions)
         self.events.append("greeting")
 
     async def test_connects_before_avatar_and_voice_session_startup(self) -> None:
         await agent_module.spatius_agent(self.ctx)
 
-        self.assertEqual(self.events, ["connect", "avatar", "session", "greeting"])
+        self.assertEqual(
+            self.events, ["connect", "avatar", "session", "browser", "greeting"]
+        )
         self.session.say.assert_awaited_once_with(
             "Hi! I'm here to help. What would you like to talk about?",
             allow_interruptions=True,
@@ -146,6 +161,34 @@ class AgentStartupTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaisesRegex(RuntimeError, "session startup failed"):
             await agent_module.spatius_agent(self.ctx)
         self.session.say.assert_not_awaited()
+
+    async def test_slow_browser_delays_greeting_until_it_joins(self) -> None:
+        self.browser_joined.clear()
+        task = asyncio.create_task(agent_module.spatius_agent(self.ctx))
+        try:
+            await asyncio.wait_for(self.waiting_for_browser.wait(), timeout=1)
+            self.session.start.assert_awaited_once()
+            self.avatar.start.assert_awaited_once()
+            self.session.say.assert_not_awaited()
+            self.browser_joined.set()
+            await asyncio.wait_for(task, timeout=1)
+            self.session.say.assert_awaited_once()
+        finally:
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+
+    async def test_cancellation_while_waiting_never_greets(self) -> None:
+        self.browser_joined.clear()
+        task = asyncio.create_task(agent_module.spatius_agent(self.ctx))
+        try:
+            await asyncio.wait_for(self.waiting_for_browser.wait(), timeout=1)
+            task.cancel()
+            with self.assertRaises(asyncio.CancelledError):
+                await task
+            self.session.say.assert_not_awaited()
+        finally:
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
 
     async def test_uses_the_business_layer_selected_masculine_voice(self) -> None:
         voice_id = "a167e0f3-df7e-4d52-a9c3-f949145efdab"

@@ -415,6 +415,50 @@ afterEach(async () => {
 });
 
 describe('built CLI', () => {
+  it.each(['pnpm', 'npm', 'bun'])(
+    'prints a border-free, copyable command block for %s after the outro',
+    async (manager) => {
+      const root = await createTemporaryDirectory();
+      const result = await runCli(
+        [
+          'app with spaces',
+          '--package-manager',
+          manager,
+          '--python-package-manager',
+          'uv',
+          '--no-install',
+          '--no-setup',
+          '--no-interactive',
+        ],
+        root,
+      );
+      const lines = result.stdout.split('\n');
+      const cdIndex = lines.findIndex(
+        (line) => line.includes('cd ') && line.includes('app with spaces'),
+      );
+      const devIndex = lines.findIndex((line) =>
+        line.includes(`${manager} run dev`),
+      );
+      expect(cdIndex).toBeGreaterThanOrEqual(0);
+      expect(devIndex).toBeGreaterThan(cdIndex);
+      expect(lines[cdIndex]).toMatch(/^cd /u);
+      expect(lines[devIndex]).toBe(`${manager} run dev`);
+      const commandBlock = lines.slice(cdIndex, devIndex + 1).join('\n');
+      expect(commandBlock).not.toMatch(/[│◇╮╯├└]/u);
+      expect(commandBlock).not.toContain('\u001b');
+      expect(result.stdout).toContain(`Next steps:\n\n${commandBlock}\n\n`);
+      expect(result.stdout.indexOf('Ready!')).toBeLessThan(
+        result.stdout.indexOf('Next steps:'),
+      );
+      const preview = await runCli(
+        ['preview-app', '--dry-run', '--no-interactive'],
+        root,
+      );
+      expect(preview.stdout).not.toContain('Next steps');
+      expect(preview.stdout).toContain('Dry run complete');
+    },
+  );
+
   it('creates a project at an explicit relative path', async () => {
     const root = await createTemporaryDirectory();
 
@@ -882,11 +926,13 @@ describe('built CLI', () => {
           ...defaultCreateOptions,
         ],
         root,
-        `\n\n\n\n\n${style}\n\n`,
+        `\n\n\n\n\n${style}\n`,
         environment,
       );
 
       expect(result.code, result.stderr).toBe(0);
+      expect(result.stdout).not.toContain('Save the local configuration');
+      expect(result.stdout).toContain('pnpm run dev');
       const worker = await readFile(join(target, '.dev.vars'), 'utf8');
       const agent = await readFile(join(target, 'agent/.env.local'), 'utf8');
       expect(worker).toContain('LIVEKIT_URL="wss://e2e.livekit.cloud"');

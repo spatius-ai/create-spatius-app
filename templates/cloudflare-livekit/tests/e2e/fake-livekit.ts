@@ -92,6 +92,10 @@ export class Room {
     this.listeners.get(event)?.delete(callback);
     return this;
   }
+  prepareConnection() {
+    window.__fixture.events.push('prepare-connection');
+    return Promise.resolve();
+  }
   async connect() {
     window.__fixture.events.push('room:connect');
     if (window.__fixture.stallConnect) await new Promise<void>(() => undefined);
