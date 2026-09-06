@@ -1,6 +1,6 @@
 {
   "name": "create-spatius-app",
-  "version": "0.0.0",
+  "version": "0.1.0-beta.0",
   "description": "Create a Spatius app with a web frontend, Cloudflare Worker, and LiveKit agent.",
   "type": "module",
   "bin": {

@@ -1,0 +1,70 @@
+name: Publish to npm
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: npm-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Check out the released commit
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Require the released commit to be on main
+        run: git merge-base --is-ancestor HEAD refs/remotes/origin/main
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      - name: Validate release version and choose npm channel
+        id: release
+        run: node scripts/prepare-release.mjs
+
+      - name: Enable pinned pnpm
+        run: corepack enable
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v10.0.1
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify generated application and browser interactions
+        run: pnpm template:test:e2e
+
+      # prepublishOnly runs pnpm check; prepack builds the CLI before upload.
+      - name: Publish with npm trusted publishing
+        run: npm publish --tag "$NPM_DIST_TAG" --access public --provenance
+        env:
+          NPM_DIST_TAG: ${{ steps.release.outputs.dist_tag }}
+
+      - name: Upload browser failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-template-browser-results
+          path: test-results/
+          if-no-files-found: ignore

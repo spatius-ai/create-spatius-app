@@ -530,7 +530,10 @@ describe('built CLI', () => {
     expect(help.stdout).toContain('--no-setup');
     expect(help.stdout).toContain('--debug');
     expect(help.stdout).toContain('setup [options]');
-    expect(version.stdout.trim()).toBe('0.0.0');
+    const metadata = JSON.parse(
+      await readFile(resolve('package.json'), 'utf8'),
+    ) as { version: string };
+    expect(version.stdout.trim()).toBe(metadata.version);
   });
 
   it('documents the standalone credential command', async () => {
