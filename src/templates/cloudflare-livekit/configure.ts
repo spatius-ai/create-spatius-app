@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 
@@ -204,6 +205,21 @@ export async function configureGeneratedTemplate(
   }
 
   const replacements = createReplacements(packageManagers, platform);
+  // Generate once per project so registration and dispatch always agree.
+  const agentReplacements = new Map([
+    ['spatius-agent', `spatius-agent-${randomUUID()}`],
+  ]);
+  await Promise.all(
+    [
+      '.dev.vars.example',
+      'wrangler.jsonc',
+      'agent/src/agent.py',
+      'agent/README.md',
+      'worker/index.test.ts',
+    ].map(async (relativePath) =>
+      renderFile(join(targetDirectory, relativePath), agentReplacements),
+    ),
+  );
   await Promise.all(
     ['README.md', 'AGENTS.md', 'agent/README.md'].map(async (relativePath) =>
       renderFile(join(targetDirectory, relativePath), replacements),

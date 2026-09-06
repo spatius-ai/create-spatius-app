@@ -936,7 +936,9 @@ describe('built CLI', () => {
       const worker = await readFile(join(target, '.dev.vars'), 'utf8');
       const agent = await readFile(join(target, 'agent/.env.local'), 'utf8');
       expect(worker).toContain('LIVEKIT_URL="wss://e2e.livekit.cloud"');
-      expect(worker).toContain('LIVEKIT_AGENT_NAME="spatius-agent"');
+      expect(worker).toMatch(
+        /LIVEKIT_AGENT_NAME="spatius-agent-[a-f0-9-]{36}"/u,
+      );
       expect(worker).toContain(`CARTESIA_VOICE_ID="${voiceId}"`);
       expect(agent).not.toContain('CARTESIA_VOICE_ID');
       expect(worker).toContain('SPATIUS_APP_ID="e2e-app-id"');

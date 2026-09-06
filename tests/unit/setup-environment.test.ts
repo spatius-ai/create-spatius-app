@@ -289,6 +289,35 @@ describe('dotenv handling', () => {
 });
 
 describe('credential files', () => {
+  it('preserves the scaffold name across setup runs and detects mismatches', async () => {
+    const root = await temporaryDirectory();
+    await mkdir(join(root, 'agent'));
+    const name = 'spatius-agent-6d34b784-ccbe-4c7c-aadc-56953565074e';
+    const examples = {
+      ...completeFiles(),
+      worker: completeFiles().worker.replace('spatius-agent', name),
+    };
+    await writeFile(join(root, '.dev.vars.example'), examples.worker);
+    let state = await readCredentialFileState(root);
+    for (let run = 0; run < 2; run++) {
+      const rendered = buildCredentialFileContents(
+        state,
+        examples,
+        credentials,
+      );
+      expect(parseDotenv(rendered.worker).get('LIVEKIT_AGENT_NAME')).toBe(name);
+      await writeFile(join(root, '.dev.vars'), rendered.worker);
+      await writeFile(join(root, 'agent/.env.local'), rendered.agent);
+      state = await readCredentialFileState(root);
+      expect(state.status).toBe('complete');
+    }
+    await writeFile(
+      join(root, '.dev.vars'),
+      examples.worker.replace(name, 'spatius-agent-other'),
+    );
+    expect((await readCredentialFileState(root)).status).toBe('inconsistent');
+  });
+
   it('reads missing and complete local state without displaying values', async () => {
     const root = await temporaryDirectory();
     await mkdir(join(root, 'agent'));

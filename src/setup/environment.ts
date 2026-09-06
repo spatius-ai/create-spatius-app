@@ -222,6 +222,7 @@ function managedValues(
 
 export function inspectCredentialConfiguration(
   contents: Pick<CredentialFileState, 'agent' | 'worker'>,
+  expectedAgentName = 'spatius-agent',
 ): Omit<CredentialFileState, 'agent' | 'worker'> {
   const worker = managedValues(contents.worker, WORKER_MANAGED_KEYS);
   const agent = managedValues(contents.agent, AGENT_MANAGED_KEYS);
@@ -255,7 +256,7 @@ export function inspectCredentialConfiguration(
     }) ||
     (worker.get('LIVEKIT_AGENT_NAME') !== undefined &&
       !isPlaceholderValue(worker.get('LIVEKIT_AGENT_NAME')) &&
-      worker.get('LIVEKIT_AGENT_NAME') !== 'spatius-agent');
+      worker.get('LIVEKIT_AGENT_NAME') !== expectedAgentName);
 
   if (inconsistent) {
     return { hasManagedValues, status: 'inconsistent' };
@@ -303,14 +304,18 @@ async function readOptionalCredentialFile(
 export async function readCredentialFileState(
   targetDirectory: string,
 ): Promise<CredentialFileState> {
-  const [worker, agent] = await Promise.all([
+  const [worker, agent, workerExample] = await Promise.all([
     readOptionalCredentialFile(join(targetDirectory, '.dev.vars')),
     readOptionalCredentialFile(join(targetDirectory, 'agent', '.env.local')),
+    readOptionalCredentialFile(join(targetDirectory, '.dev.vars.example')),
   ]);
 
   return {
     agent,
-    ...inspectCredentialConfiguration({ agent, worker }),
+    ...inspectCredentialConfiguration(
+      { agent, worker },
+      parseDotenv(workerExample ?? '').get('LIVEKIT_AGENT_NAME'),
+    ),
     worker,
   };
 }
@@ -371,7 +376,9 @@ export function buildCredentialFileContents(
         ? {}
         : { CARTESIA_VOICE_ID: credentials.voiceId }),
       ...shared,
-      LIVEKIT_AGENT_NAME: 'spatius-agent',
+      LIVEKIT_AGENT_NAME:
+        parseDotenv(examples.worker).get('LIVEKIT_AGENT_NAME') ??
+        'spatius-agent',
       SPATIUS_AVATAR_ID: credentials.spatius.avatarId,
       // Clear a previous avatar’s background when a new selection has none.
       SPATIUS_AVATAR_BACKGROUND_URL: credentials.spatius.backgroundUrl ?? '',
