@@ -1,7 +1,7 @@
-import { appendFileSync, readFileSync } from 'node:fs';
+import { appendFileSync, readFileSync, writeFileSync } from 'node:fs';
 
 const event = JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'));
-const { version } = JSON.parse(readFileSync('package.json', 'utf8'));
+const metadata = JSON.parse(readFileSync('package.json', 'utf8'));
 const release = event.release;
 
 // Require canonical SemVer without build metadata (npm versions must be unique).
@@ -27,12 +27,33 @@ if (
   );
 }
 
-if (release.tag_name.slice(1) !== version) {
+const version = release.tag_name.slice(1);
+const isPrerelease = Boolean(match[2]);
+if (release.prerelease !== isPrerelease) {
   throw new Error(
-    `Release tag ${release.tag_name} does not match package.json version ${version}. Update the version on main before tagging.`,
+    'Prerelease version tags require the GitHub pre-release checkbox; stable version tags require it unchecked.',
   );
 }
 
-const distTag = release.prerelease || match[2] ? 'beta' : 'latest';
+// Fail closed on registry errors. Only a missing version permits publication.
+const response = await fetch(
+  `https://registry.npmjs.org/${encodeURIComponent(metadata.name)}/${encodeURIComponent(version)}`,
+  { signal: AbortSignal.timeout(15_000), cache: 'no-store' },
+);
+if (response.ok) {
+  throw new Error(
+    `${metadata.name}@${version} is already published. Choose a new release tag.`,
+  );
+}
+if (response.status !== 404) {
+  throw new Error(
+    `Cannot verify npm version availability: HTTP ${response.status}.`,
+  );
+}
+
+// Only the runner's root manifest changes; no version commit or Git tag is made.
+metadata.version = version;
+writeFileSync('package.json', `${JSON.stringify(metadata, null, 2)}\n`);
+const distTag = isPrerelease ? 'beta' : 'latest';
 appendFileSync(process.env.GITHUB_OUTPUT, `dist_tag=${distTag}\n`);
-console.log(`Publishing create-spatius-app@${version} to ${distTag}.`);
+console.log(`Prepared ${metadata.name}@${version} for ${distTag}.`);

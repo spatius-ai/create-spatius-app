@@ -7,26 +7,35 @@ macOS, Windows, and Node.js 22/24, and tests a generated application.
 `publish.yml` runs when a GitHub release is **published**, including a prerelease
 published from a draft. Creating a tag or saving a draft alone does not publish.
 
-The release tag must be `v` followed by the exact root `package.json` version,
-without SemVer build metadata. Its commit must be reachable from `origin/main`;
-it does not have to be the current tip. The workflow checks out the event's
-commit, validates these rules, verifies the generated application and browser
-interactions, and runs `npm publish`. The existing `prepublishOnly` hook runs
-`pnpm check`, including packed-CLI tests, and `prepack` builds the CLI.
+The release tag is the source of truth for the npm version. Use `v` followed by
+canonical SemVer without build metadata. Its commit must be reachable from
+`origin/main`; it does not have to be the current tip. CI validates the tag and
+GitHub pre-release checkbox, rejects a version that already exists on npm, and
+sets the root `package.json` version in its temporary checkout before installing,
+building, testing, or publishing. Registry errors stop the release.
+
+No version-bump PR is needed. CI never commits the version change or pushes to
+`main`. The source manifest keeps its development version; the published npm
+manifest and CLI `--version` use the release tag's version. Template application
+versions and the pnpm lockfile are unchanged.
+
+The workflow verifies the generated application and browser interactions, then
+runs `npm publish`. The existing `prepublishOnly` hook runs `pnpm check`, including
+packed-CLI tests, and `prepack` builds the CLI.
 
 | GitHub tag      | GitHub pre-release checkbox | npm channel |
 | --------------- | --------------------------- | ----------- |
-| `v0.1.0-beta.1` | Either                      | `beta`      |
-| `v0.1.0-rc.1`   | Either                      | `beta`      |
-| `v0.1.0`        | Checked                     | `beta`      |
+| `v0.1.0-beta.1` | Checked                     | `beta`      |
+| `v0.1.0-rc.1`   | Checked                     | `beta`      |
 | `v0.1.0`        | Unchecked                   | `latest`    |
 
-Prefer explicit `-beta.N` versions for betas. npm versions are immutable: a plain
-`0.1.0` published to `beta` cannot later be republished as `0.1.0`. Editing the
-GitHub release checkbox does not promote an npm version. To graduate a beta,
-publish a new normal release such as `0.1.0` after `0.1.0-beta.2`. If you already
-published plain `0.1.0` to beta, use a new stable version such as `0.1.1`, or have
-an authenticated maintainer explicitly move the existing version's dist-tag.
+A prerelease tag with an unchecked checkbox, or a plain stable tag with a checked
+checkbox, is rejected before the manifest changes. The GitHub release title is
+only a display label; it does not determine the version or npm channel.
+
+npm versions are immutable. Editing a GitHub release checkbox does not promote
+an npm version. To graduate a beta, publish a new normal release such as `v0.1.0`
+after `v0.1.0-beta.2`.
 
 ## One-time setup
 
@@ -79,21 +88,23 @@ an authenticated maintainer explicitly move the existing version's dist-tag.
 
 ## Publish each subsequent release
 
-1. Choose a new version. For example, after bootstrap, prepare the next beta:
+1. Merge feature, fix, and dependency PRs into `main` as usual. Leave the root
+   package version alone. Wait for CI to pass on the code you want to release.
+2. In GitHub, open **Releases → Draft a new release**. For the next beta, enter:
 
-   ```sh
-   npm version 0.1.0-beta.1 --no-git-tag-version
-   ```
+   | Field                | Value                            |
+   | -------------------- | -------------------------------- |
+   | Release title        | `v0.1.0-beta.1`                  |
+   | Tag                  | Create new tag `v0.1.0-beta.1`   |
+   | Target               | `main`, containing this workflow |
+   | Set as a pre-release | Checked                          |
 
-   For stable, use `npm version 0.1.0 --no-git-tag-version`. Change only the
-   generator's root version; the generated application's version is independent.
-   pnpm's lockfile does not contain the root package version.
+   Add release notes describing changes since the previous version. For later
+   betas, increment to `v0.1.0-beta.2`, `v0.1.0-beta.3`, and so on. For stable,
+   use `v0.1.0` and leave the pre-release checkbox unchecked.
 
-2. Commit the version change, open a PR, wait for CI, and merge into `main`.
-3. In GitHub, open **Releases → Draft a new release**. Create a new tag matching
-   the version (`v0.1.0-beta.1`), select **main** as the target, add release notes,
-   check **Set as a pre-release** for a beta, and click **Publish release**.
-   For stable, use `v0.1.0` and leave the pre-release checkbox unchecked.
+3. Click **Publish release**. CI derives the npm version from the tag; do not
+   run `npm version` or `npm publish` locally for routine releases.
 4. Watch **Actions → Publish to npm**. The workflow reruns checks for the tagged
    commit before publishing. Publish one release at a time and wait for it to
    finish: npm channel tags point to the last version published to that channel,
@@ -111,11 +122,15 @@ an authenticated maintainer explicitly move the existing version's dist-tag.
    updates in [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) after the first stable
    publication. A beta-only package does not make the README's unqualified
    stable commands ready; retain the availability notice until stable exists.
+   The bootstrap publication also received a `latest` tag from npm, and removal
+   returned HTTP 400. Until the first stable publication, use `@beta` explicitly
+   for the newest beta and inspect dist-tags rather than assuming `latest` is stable.
 
 ## Failures and retries
 
-- For a version mismatch or a commit outside `main`, fix the source through a
-  PR and create a new matching release. Do not move already published tags.
+- For an invalid tag, inconsistent pre-release checkbox, or a commit outside
+  `main`, create a correctly configured release from `main`. Do not move already
+  published tags. Edits to existing release metadata do not trigger publishing.
 - For authentication failures, verify all trusted-publisher fields, permission
   for direct `npm publish`, and the public repository URL in `package.json`.
 - If a run fails before publishing, fix the external setup and rerun the failed

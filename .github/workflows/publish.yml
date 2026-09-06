@@ -37,7 +37,7 @@ jobs:
           registry-url: https://registry.npmjs.org
           package-manager-cache: false
 
-      - name: Validate release version and choose npm channel
+      - name: Validate release and set package version from tag
         id: release
         run: node scripts/prepare-release.mjs
 
