@@ -3,6 +3,7 @@ import { chmod, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { PromptCancelledError } from '../errors.js';
 import { createProcessInvocation } from '../package-managers.js';
 import {
   type LiveKitCredentials,
@@ -129,7 +130,11 @@ function interactiveCommand(
     child.once('error', () => {
       reject(new Error('The LiveKit CLI could not be started.'));
     });
-    child.once('close', (code) => {
+    child.once('close', (code, signal) => {
+      if (signal === 'SIGINT' || signal === 'SIGTERM' || code === 130) {
+        reject(new PromptCancelledError('LiveKit setup was cancelled.'));
+        return;
+      }
       if (code === 0) {
         resolvePromise();
         return;
@@ -269,9 +274,11 @@ export async function loadLiveKitCredentialsWithCli({
       },
     });
     return validated.liveKit;
-  } catch {
+  } catch (error) {
+    if (error instanceof PromptCancelledError) throw error;
     throw new Error(
       'LiveKit CLI did not return a complete, valid credential set.',
+      { cause: error },
     );
   } finally {
     await fileSystem.remove(directory).catch(() => {
