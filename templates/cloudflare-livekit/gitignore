@@ -28,3 +28,6 @@ agent/livekit.toml
 *.log
 .idea/
 .vscode/
+
+# Guided deployment targets and recovery state
+/.spatius/

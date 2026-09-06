@@ -166,6 +166,7 @@ export async function configureGeneratedTemplate(
   ]
     .map(run)
     .join(' && ');
+  metadata.scripts['deploy:app'] = 'npx create-spatius-app deploy';
   metadata.scripts.deploy = `${run('build')} && wrangler deploy`;
   metadata.scripts.dev = `concurrently --kill-others --names web,agent "${run('dev:web')}" "${run('agent:dev')}"`;
 

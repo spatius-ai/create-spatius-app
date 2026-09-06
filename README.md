@@ -48,6 +48,16 @@ npx create-spatius-app setup . --interactive
 
 This configures local development only; it does not deploy your app.
 
+## Deploy
+
+Choose **Deploy now?** after setup, or run from your generated project:
+
+```sh
+npx create-spatius-app deploy
+```
+
+Follow the guide to publish the app to Cloudflare and the agent to LiveKit Cloud.
+
 ## More options
 
 ```sh

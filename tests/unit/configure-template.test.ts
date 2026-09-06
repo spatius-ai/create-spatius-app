@@ -145,6 +145,12 @@ describe('generated template configuration', () => {
       const metadata = JSON.parse(
         await readFile(join(project, 'package.json'), 'utf8'),
       ) as { scripts: Record<string, string> };
+      expect(metadata.scripts['deploy:app']).toBe(
+        'npx create-spatius-app deploy',
+      );
+      expect(metadata.scripts.deploy).toBe(
+        `${manager} run build && wrangler deploy`,
+      );
       expect(metadata.scripts.dev).toBe(
         `concurrently --kill-others --names web,agent "${manager} run dev:web" "${manager} run agent:dev"`,
       );

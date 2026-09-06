@@ -14,6 +14,7 @@ export function createFixtureTemplate(
     configure: () => Promise.resolve(),
     createInstallPlan: () => [],
     nextSteps: () => ['fixture run'],
+    deployment: { run: () => Promise.resolve({ status: 'deferred' }) },
     setup: {
       recognizes: () => Promise.resolve(false),
       run: () => Promise.resolve('unchanged'),

@@ -300,6 +300,14 @@ function setupPresentation(theme: TerminalTheme, debug = false) {
   };
 }
 
+function deploymentPresentation(theme: TerminalTheme) {
+  return {
+    onStatus: (message: string) => note(message, theme.accent('Deployment')),
+    onWarning: (message: string) => note(message, theme.highlight('Notice')),
+    onOutput: (line: string) => process.stderr.write(`${line}\n`),
+  };
+}
+
 async function detectExecutionAgent(): Promise<boolean> {
   const agent = await determineAgent().catch(() => ({
     agent: undefined,
@@ -466,6 +474,31 @@ async function runCreateCommand(
       }
     }
 
+    if (
+      !options.dryRun &&
+      !options.json &&
+      !options.yes &&
+      interactive &&
+      isSecureTerminal &&
+      credentialsConfigured
+    ) {
+      try {
+        if (await prompts.confirm('Deploy now?', false))
+          await template.deployment.run({
+            ...deploymentPresentation(theme),
+            prompts,
+            targetDirectory,
+          });
+      } catch (error) {
+        if (error instanceof PromptCancelledError) {
+          note(
+            'Deployment cancelled. The project and saved deployment targets were kept.',
+            theme.highlight('Deployment'),
+          );
+        } else throw error;
+      }
+    }
+
     const result = createSuccessResult({
       dependenciesInstalled: shouldInstall,
       dryRun: options.dryRun,
@@ -595,6 +628,47 @@ async function runSetupCommand(
   }
 }
 
+async function runDeployCommand(
+  directory: string | undefined,
+  options: SetupCommandOptions,
+): Promise<void> {
+  if (
+    options.interactive === false ||
+    options.yes ||
+    options.json ||
+    options.dryRun ||
+    ((!process.stdin.isTTY || !process.stdout.isTTY) &&
+      !isTestTerminalOverride()) ||
+    ((await detectExecutionAgent()) && options.interactive !== true) ||
+    (process.env.CI && options.interactive !== true)
+  ) {
+    throw new CliError(
+      'INVALID_ARGUMENT',
+      'Guided deployment requires an interactive terminal. Run npx create-spatius-app deploy . --interactive in your terminal.',
+      { exitCode: EXIT_CODES.invalidArgument },
+    );
+  }
+  const targetDirectory = normalizeTargetDirectory(directory ?? '.');
+  const template = await resolveProjectTemplate(targetDirectory);
+  const prompts = createPromptSession();
+  const theme = createTerminalTheme();
+  try {
+    intro(theme.accent('Deploy your Spatius app'));
+    const result = await template.deployment.run({
+      ...deploymentPresentation(theme),
+      targetDirectory,
+      prompts,
+    });
+    outro(
+      result.status === 'deployed'
+        ? `App deployed: ${result.url}`
+        : 'Deployment deferred. Run npx create-spatius-app deploy when ready.',
+    );
+  } finally {
+    prompts.close();
+  }
+}
+
 function addCreateOptions(command: Command): Command {
   return command
     .option('-y, --yes', 'accept safe defaults without prompting')
@@ -682,6 +756,27 @@ Examples:
         runSetupCommand(
           version,
           projectDirectoryArgument,
+          command.optsWithGlobals<SetupCommandOptions>(),
+        ),
+    );
+
+  program
+    .command('deploy')
+    .description('deploy the frontend, Worker API, and LiveKit Cloud agent')
+    .argument('[project-directory]', 'generated project to deploy', '.')
+    .option(
+      '--interactive',
+      'allow browser authentication and deployment prompts',
+    )
+    .option('--no-interactive', 'disable interactive prompts')
+    .action(
+      async (
+        directory: string | undefined,
+        _options: SetupCommandOptions,
+        command: Command,
+      ) =>
+        runDeployCommand(
+          directory,
           command.optsWithGlobals<SetupCommandOptions>(),
         ),
     );

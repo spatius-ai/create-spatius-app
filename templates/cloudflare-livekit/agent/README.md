@@ -69,7 +69,12 @@ __SPATIUS_AGENT_CHECK_COMMAND__
 
 ## LiveKit Cloud
 
-Install and authenticate the LiveKit CLI, then run this from `agent/`:
+For the complete app, run `npx create-spatius-app deploy` from the project root.
+It reuses setup credentials, prepares the CLI, and deploys both services. See
+[the app deployment guide](../README.md#deploy-the-app).
+
+To manage only the agent manually, authenticate the LiveKit CLI and run this
+from `agent/`:
 
 ```sh
 lk cloud auth

@@ -86,3 +86,23 @@ execution, and never add implicit deployment or overwrite a non-empty target.
 CLI-interface changes require built-command end-to-end coverage. Package-layout
 changes require packed-artifact coverage. Do not commit `dist/`, coverage,
 dependency stores, npm tarballs, or browser test output.
+
+## Guided deployment
+
+Each template supplies a `deployment.run` capability. Both the creation offer
+and standalone `deploy` command use it after enforcing interactive terminal
+requirements. The Cloudflare/LiveKit implementation lives in `src/deploy/`:
+provider adapters, process execution, local state, and the shared wizard have
+injectable boundaries for offline tests.
+
+Run `pnpm check` and `pnpm template:check` after deployment changes. Deployment
+tests use fake providers and child processes; they must not read developer
+credentials or create cloud resources. Preserve the global coverage thresholds.
+Provider JSON must be validated before mutations, and captured authentication
+output must never be streamed. Do not treat a failed existence check as absence.
+
+For live acceptance, use a disposable generated project and designated test
+accounts. Verify the frontend and health endpoint, then a real browser voice
+session. Deploy an update and confirm the Worker name and agent ID stay the
+same. Delete only the resources created by this acceptance run. Record any
+unavailable credentials or manual browser steps as unverified acceptance checks.

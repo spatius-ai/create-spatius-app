@@ -72,6 +72,12 @@ export const cloudflareLivekitTemplate: TemplateDefinition = {
       javascriptRunCommand(javascriptPackageManager, 'dev'),
     ];
   },
+  deployment: {
+    async run(options) {
+      const { runDeployment } = await import('../../deploy/wizard.js');
+      return runDeployment(options);
+    },
+  },
   setup: {
     async recognizes(directory) {
       // These structural markers also recognize projects generated before the

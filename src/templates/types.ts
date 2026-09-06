@@ -39,6 +39,9 @@ export interface TemplateDefinition {
     platform?: NodeJS.Platform,
   ): InstallStep[];
   nextSteps(options: TemplateNextStepsOptions): string[];
+  readonly deployment: {
+    run: typeof import('../deploy/wizard.js').runDeployment;
+  };
   readonly setup: {
     recognizes(directory: string): Promise<boolean>;
     run: typeof runCredentialSetup;

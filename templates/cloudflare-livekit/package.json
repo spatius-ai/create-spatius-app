@@ -9,6 +9,7 @@
     "build": "tsc -b && vite build",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm test:dev && pnpm build",
+    "deploy:app": "npx create-spatius-app deploy",
     "deploy": "pnpm build && wrangler deploy",
     "dev": "concurrently --kill-others --names web,agent \"pnpm run dev:web\" \"pnpm run agent:dev\"",
     "dev:web": "node scripts/dev-web.mjs",
