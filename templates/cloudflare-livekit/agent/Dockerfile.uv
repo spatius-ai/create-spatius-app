@@ -1,0 +1,29 @@
+ARG PYTHON_VERSION=3.13
+
+FROM ghcr.io/astral-sh/uv:python${PYTHON_VERSION}-bookworm-slim AS builder
+
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_PYTHON_DOWNLOADS=never
+
+WORKDIR /app
+
+COPY pyproject.toml uv.lock ./
+RUN uv sync --locked --no-dev --no-install-project
+
+COPY src ./src
+RUN uv run --no-dev --module livekit.agents download-files
+
+FROM python:${PYTHON_VERSION}-slim-bookworm
+
+ENV PATH="/app/.venv/bin:$PATH" \
+    PYTHONUNBUFFERED=1
+
+RUN useradd --create-home --uid 10001 appuser
+WORKDIR /app
+
+COPY --from=builder --chown=appuser:appuser /app /app
+
+USER appuser
+
+CMD ["python", "-m", "src.agent", "start"]

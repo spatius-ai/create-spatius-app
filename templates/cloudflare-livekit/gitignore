@@ -1,0 +1,30 @@
+# JavaScript
+node_modules/
+dist/
+coverage/
+test-results/
+playwright-report/
+*.tsbuildinfo
+
+# Cloudflare
+.wrangler/
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+
+# Python
+agent/.venv/
+agent/.pytest_cache/
+agent/.ruff_cache/
+agent/.env
+agent/.env.*
+!agent/.env.example
+agent/**/__pycache__/
+agent/**/*.py[cod]
+agent/livekit.toml
+
+# Local tooling
+.DS_Store
+*.log
+.idea/
+.vscode/

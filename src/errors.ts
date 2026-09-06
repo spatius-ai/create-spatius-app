@@ -10,7 +10,10 @@ export const EXIT_CODES = {
 export type CliErrorCode =
   | 'CANCELLED'
   | 'FILESYSTEM_ERROR'
+  | 'INSTALL_FAILED'
   | 'INVALID_ARGUMENT'
+  | 'PACKAGE_MANAGER_NOT_FOUND'
+  | 'PACKAGE_MANAGER_UNAVAILABLE'
   | 'TARGET_NOT_DIRECTORY'
   | 'TARGET_NOT_EMPTY'
   | 'TEMPLATE_NOT_FOUND'
@@ -44,8 +47,8 @@ export class CliError extends Error {
 }
 
 export class PromptCancelledError extends CliError {
-  constructor() {
-    super('CANCELLED', 'Project creation was cancelled.', {
+  constructor(message = 'Project creation was cancelled.') {
+    super('CANCELLED', message, {
       exitCode: EXIT_CODES.cancelled,
       recovery: 'Run the command again when you are ready.',
     });

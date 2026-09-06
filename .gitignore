@@ -5,3 +5,10 @@ coverage/
 *.tgz
 .DS_Store
 *.log
+test-results/
+playwright-report/
+.wrangler/
+.venv/
+.ruff_cache/
+__pycache__/
+*.py[cod]

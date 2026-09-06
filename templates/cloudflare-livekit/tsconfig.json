@@ -1,0 +1,9 @@
+{
+  "compilerOptions": { "paths": { "@/*": ["./web/*"] } },
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.web.json" },
+    { "path": "./tsconfig.worker.json" },
+    { "path": "./tsconfig.node.json" }
+  ]
+}

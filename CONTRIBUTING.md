@@ -1,0 +1,63 @@
+# Contributing
+
+Use Node.js 22 or newer and the pnpm version pinned in `package.json`. Read
+`AGENTS.md` before editing, then install with `pnpm install --frozen-lockfile`.
+Run `pnpm check` for the required formatting, lint, type, dependency, unit,
+end-to-end, and package checks. Run `pnpm template:check` when changing template
+assets or an adapter; it generates temporary projects and fully verifies each
+registered template's package-manager variants.
+
+## Internal template entries
+
+`src/templates.ts` defines a typed registry with one current entry,
+`cloudflare-livekit`. It is the default for creation. The CLI flags, package
+manager defaults, interaction policy, errors, and output schemas are public
+interfaces; the internal registry does not add a public template selector.
+Successful JSON output still uses `"template": "default"`.
+
+To add a future internal entry:
+
+1. Add its assets under `templates/<id>/`, including package-safe example
+   filenames and exclusions for credentials, dependency directories, build
+   output, and test artifacts. Use its adapter to restore reserved dotfiles.
+2. Implement `TemplateDefinition` under `src/templates/<id>/`. Keep file
+   inclusion and path mapping, package-manager configuration, install plans,
+   setup recognition and workflow, descriptions, next steps, and verification
+   variants in the adapter. Shared code owns safe copying, rollback, process
+   execution, and the interaction policy.
+3. Register it in `src/templates.ts`. Keep the explicit default unchanged
+   unless a separately reviewed product change calls for another default.
+   Resolve assets relative to the installed generator package. The internal
+   `dist/templates.js` bundle lets verification scripts use the same registry
+   without adding CLI flags or publishing a supported library API.
+4. Define setup recognition that accepts the entry's supported previous
+   layouts and rejects unrelated projects. Recognition must not authenticate,
+   open a browser, read credentials, or write files. Run the setup workflow only
+   after the CLI's existing secure interaction decision allows it. Ambiguous
+   matches must fail rather than select an arbitrary workflow.
+5. Add independent fixture tests for selection and shared delegation, plus
+   adapter tests for its actual generated behavior. Use temporary directories;
+   never write fixtures into shipped template assets or mutate the singleton
+   registry. Check that dry-run paths match created files and unsafe or
+   colliding mappings fail before writes.
+6. Run `pnpm check` and `pnpm template:check`. The package checker derives the
+   required asset paths from every registered verification variant; make the
+   variants cover all alternative source files, including lockfiles and
+   Dockerfiles. The packed-command tests must run an installed npm artifact
+   from a directory outside the repository.
+
+The `pnpm template:test:e2e` command builds the CLI and runs Chromium
+tests after the pnpm/uv JavaScript checks for each entry. It installs Chromium
+(including system dependencies on Linux), retains output under
+`test-results/<id>/`, and continues the normal full verification. Use it when
+the generated template includes Playwright configuration and `test:e2e`.
+Failures forward subprocess stdout and stderr before temporary-project cleanup.
+
+## Change boundaries
+
+Keep template and provider behavior in its adapter and generated application.
+Keep secrets out of browser code, preserve deterministic non-interactive
+execution, and never add implicit deployment or overwrite a non-empty target.
+CLI-interface changes require built-command end-to-end coverage. Package-layout
+changes require packed-artifact coverage. Do not commit `dist/`, coverage,
+dependency stores, npm tarballs, or browser test output.

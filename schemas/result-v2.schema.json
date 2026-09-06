@@ -1,0 +1,146 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "create-spatius-app result v2",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/success"
+    },
+    {
+      "$ref": "#/$defs/failure"
+    }
+  ],
+  "$defs": {
+    "success": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "ok",
+        "command",
+        "dryRun",
+        "generatorVersion",
+        "projectDirectory",
+        "template",
+        "created",
+        "wouldCreate",
+        "actions",
+        "packageManagers",
+        "nextSteps"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 2
+        },
+        "ok": {
+          "const": true
+        },
+        "command": {
+          "const": "create"
+        },
+        "dryRun": {
+          "type": "boolean"
+        },
+        "generatorVersion": {
+          "type": "string"
+        },
+        "projectDirectory": {
+          "type": "string"
+        },
+        "template": {
+          "const": "default"
+        },
+        "created": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "wouldCreate": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "actions": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["dependenciesInstalled", "gitInitialized", "deployed"],
+          "properties": {
+            "dependenciesInstalled": {
+              "type": "boolean"
+            },
+            "gitInitialized": {
+              "const": false
+            },
+            "deployed": {
+              "const": false
+            }
+          }
+        },
+        "packageManagers": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["javascript", "python"],
+          "properties": {
+            "javascript": {
+              "enum": ["npm", "pnpm", "bun"]
+            },
+            "python": {
+              "enum": ["pip", "uv"]
+            }
+          }
+        },
+        "nextSteps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "failure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "ok", "error"],
+      "properties": {
+        "schemaVersion": {
+          "const": 2
+        },
+        "ok": {
+          "const": false
+        },
+        "error": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["code", "message"],
+          "properties": {
+            "code": {
+              "enum": [
+                "CANCELLED",
+                "FILESYSTEM_ERROR",
+                "INSTALL_FAILED",
+                "INVALID_ARGUMENT",
+                "PACKAGE_MANAGER_NOT_FOUND",
+                "PACKAGE_MANAGER_UNAVAILABLE",
+                "TARGET_NOT_DIRECTORY",
+                "TARGET_NOT_EMPTY",
+                "TEMPLATE_NOT_FOUND",
+                "UNSAFE_TARGET",
+                "UNKNOWN_ERROR"
+              ]
+            },
+            "message": {
+              "type": "string"
+            },
+            "path": {
+              "type": "string"
+            },
+            "recovery": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}
