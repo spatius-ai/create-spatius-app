@@ -37,6 +37,7 @@ import {
   writeJsonResult,
 } from './output.js';
 import { normalizeTargetDirectory } from './project-directory.js';
+import { Presence } from './presence.js';
 import { PromptSession, type PromptOption } from './prompts.js';
 import { createScaffoldPlan, scaffoldProject } from './scaffold.js';
 import { SecretRedactor } from './setup/redaction.js';
@@ -351,8 +352,10 @@ async function runCreateCommand(
   });
   const prompts = createPromptSession();
   const theme = createTerminalTheme();
+  const presence = new Presence({ interactive, theme });
 
   try {
+    await presence.welcome();
     if (!options.json) {
       intro(
         `${theme.accent('create-spatius-app')} ${theme.highlight(`v${version}`)}`,
@@ -394,7 +397,12 @@ async function runCreateCommand(
         });
 
     if (shouldInstall) {
-      const progress = options.json ? undefined : spinner();
+      const usePresence = presence.animated;
+      const progress = options.json
+        ? undefined
+        : usePresence
+          ? presence
+          : spinner();
       let progressStarted = false;
 
       try {
@@ -409,7 +417,7 @@ async function runCreateCommand(
             }
           },
           packageManagers,
-          silent: options.json,
+          silent: options.json || usePresence,
           targetDirectory,
           template,
         });
@@ -504,6 +512,7 @@ async function runCreateCommand(
       ),
     );
   } finally {
+    presence.stop();
     prompts.close();
   }
 }
@@ -551,10 +560,12 @@ async function runSetupCommand(
 
   const prompts = createPromptSession();
   const theme = createTerminalTheme();
+  const presence = new Presence({ interactive, theme });
   const targetDirectory = normalizeTargetDirectory(
     projectDirectoryArgument ?? '.',
   );
   try {
+    await presence.welcome();
     intro(
       `${theme.accent('create-spatius-app setup')} ${theme.highlight(`v${version}`)}`,
     );
@@ -572,6 +583,7 @@ async function runSetupCommand(
       ),
     );
   } finally {
+    presence.stop();
     prompts.close();
   }
 }

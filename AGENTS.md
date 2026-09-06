@@ -1,5 +1,11 @@
 # AGENTS.md
 
+## Terminal UI previews
+
+When a terminal recording would help review a CLI presentation change, follow
+`skills/record-terminal.md` to generate one locally on demand. Recording is not
+a required CI check or a requirement for every pull request.
+
 ## Repository purpose
 
 This repository contains the `create-spatius-app` project generator. The first
