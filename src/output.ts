@@ -1,11 +1,22 @@
 import type { CliError, CliErrorCode } from './errors.js';
+import {
+  type JavaScriptPackageManager,
+  type PythonPackageManager,
+  type SelectedPythonPackageManager,
+} from './package-managers.js';
+import { getTemplate, type TemplateDefinition } from './templates.js';
 
-export const OUTPUT_SCHEMA_VERSION = 1 as const;
+export const OUTPUT_SCHEMA_VERSION = 2 as const;
 
 interface ActionsResult {
-  dependenciesInstalled: false;
+  dependenciesInstalled: boolean;
   deployed: false;
   gitInitialized: false;
+}
+
+interface PackageManagersResult {
+  javascript: JavaScriptPackageManager;
+  python: PythonPackageManager;
 }
 
 export interface SuccessResult {
@@ -16,6 +27,7 @@ export interface SuccessResult {
   generatorVersion: string;
   nextSteps: string[];
   ok: true;
+  packageManagers: PackageManagersResult;
   projectDirectory: string;
   schemaVersion: typeof OUTPUT_SCHEMA_VERSION;
   template: 'default';
@@ -38,21 +50,31 @@ export interface FailureResult {
 export type CliResult = FailureResult | SuccessResult;
 
 interface CreateSuccessResultOptions {
+  template?: TemplateDefinition;
   dryRun: boolean;
   files: readonly string[];
   generatorVersion: string;
+  dependenciesInstalled: boolean;
+  javascriptPackageManager: JavaScriptPackageManager;
+  platform?: NodeJS.Platform;
   projectDirectory: string;
+  pythonPackageManager: SelectedPythonPackageManager;
 }
 
 export function createSuccessResult({
   dryRun,
   files,
   generatorVersion,
+  dependenciesInstalled,
+  javascriptPackageManager,
+  platform = process.platform,
   projectDirectory,
+  pythonPackageManager,
+  template = getTemplate(),
 }: CreateSuccessResultOptions): SuccessResult {
   return {
     actions: {
-      dependenciesInstalled: false,
+      dependenciesInstalled,
       deployed: false,
       gitInitialized: false,
     },
@@ -60,8 +82,17 @@ export function createSuccessResult({
     created: dryRun ? [] : [...files],
     dryRun,
     generatorVersion,
-    nextSteps: [],
+    nextSteps: template.nextSteps({
+      dependenciesInstalled,
+      javascriptPackageManager,
+      platform,
+      pythonPackageManager,
+    }),
     ok: true,
+    packageManagers: {
+      javascript: javascriptPackageManager,
+      python: pythonPackageManager.name,
+    },
     projectDirectory,
     schemaVersion: OUTPUT_SCHEMA_VERSION,
     template: 'default',

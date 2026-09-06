@@ -1,6 +1,0 @@
-node_modules/
-dist/
-.dev.vars
-.env
-.DS_Store
-*.log

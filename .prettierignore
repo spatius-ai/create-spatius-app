@@ -1,4 +1,10 @@
-coverage
-dist
-node_modules
+coverage/
+dist/
+node_modules/
 pnpm-lock.yaml
+templates/*/.wrangler/
+templates/*/agent/.venv/
+templates/*/dist/
+templates/*/node_modules/
+templates/*/pnpm-lock.yaml
+templates/*/worker-configuration.d.ts

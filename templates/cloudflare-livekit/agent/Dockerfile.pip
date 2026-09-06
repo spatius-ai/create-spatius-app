@@ -1,0 +1,31 @@
+ARG PYTHON_VERSION=3.13
+
+FROM python:${PYTHON_VERSION}-slim-bookworm AS builder
+
+ENV PATH="/app/.venv/bin:$PATH" \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    VIRTUAL_ENV=/app/.venv
+
+RUN python -m venv "$VIRTUAL_ENV"
+WORKDIR /app
+
+COPY pyproject.toml README.md ./
+COPY src ./src
+RUN python -m pip install --no-cache-dir . \
+    && python -m livekit.agents download-files
+
+FROM python:${PYTHON_VERSION}-slim-bookworm
+
+ENV PATH="/app/.venv/bin:$PATH" \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+RUN useradd --create-home --uid 10001 appuser
+WORKDIR /app
+
+COPY --from=builder --chown=appuser:appuser /app /app
+
+USER appuser
+
+CMD ["python", "-m", "src.agent", "start"]

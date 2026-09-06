@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Spatius agent dispatch metadata",
+  "description": "Session-specific configuration passed from the business layer to the LiveKit agent through explicit dispatch metadata.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["version", "avatar"],
+  "properties": {
+    "voice": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S",
+          "description": "Cartesia voice ID. Omit voice for the backwards-compatible Jacqueline default."
+        }
+      }
+    },
+    "version": {
+      "const": 1,
+      "description": "Major version of the dispatch metadata contract."
+    },
+    "avatar": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S",
+          "description": "Spatius avatar ID selected for this session."
+        }
+      }
+    }
+  }
+}

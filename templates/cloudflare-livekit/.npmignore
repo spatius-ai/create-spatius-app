@@ -1,0 +1,15 @@
+.wrangler/
+.dev.vars
+.dev.vars.*
+agent/.env
+agent/.env.*
+agent/.venv/
+agent/.pytest_cache/
+agent/.ruff_cache/
+agent/**/__pycache__/
+agent/**/*.py[cod]
+coverage/
+test-results/
+playwright-report/
+dist/
+node_modules/

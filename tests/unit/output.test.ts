@@ -1,47 +1,89 @@
 import Ajv2020 from 'ajv/dist/2020.js';
 import { describe, expect, it, vi } from 'vitest';
 
-import resultSchema from '../../schemas/result-v1.schema.json' with { type: 'json' };
+import resultSchema from '../../schemas/result-v2.schema.json' with { type: 'json' };
 import { CliError, EXIT_CODES } from '../../src/errors.js';
 import {
   createFailureResult,
   createSuccessResult,
   writeJsonResult,
 } from '../../src/output.js';
+import { createPackageManagers } from '../package-manager-fixtures.js';
+import { createFixtureTemplate } from '../template-fixtures.js';
 
 const validateResult = new Ajv2020({ strict: true }).compile(resultSchema);
+const packageManagers = createPackageManagers();
+
+function successOptions(dryRun: boolean, files: string[]) {
+  return {
+    dependenciesInstalled: false,
+    dryRun,
+    files,
+    generatorVersion: '1.2.3',
+    javascriptPackageManager: packageManagers.javascript.name,
+    projectDirectory: '/project',
+    pythonPackageManager: packageManagers.python,
+  } as const;
+}
 
 describe('structured output', () => {
+  it('takes next steps from the selected adapter while preserving the public template value', () => {
+    const result = createSuccessResult({
+      ...successOptions(false, ['file']),
+      template: createFixtureTemplate(),
+    });
+    expect(result.nextSteps).toEqual(['fixture run']);
+    expect(result.template).toBe('default');
+    expect(validateResult(result)).toBe(true);
+  });
+
+  it.each(['pnpm', 'bun', 'npm'] as const)(
+    'uses %s to start the generated app',
+    (javascriptPackageManager) => {
+      const result = createSuccessResult({
+        ...successOptions(false, ['file']),
+        javascriptPackageManager,
+      });
+      expect(result.nextSteps.at(-1)).toBe(
+        `${javascriptPackageManager} run dev`,
+      );
+    },
+  );
+
   it('reports files created by a real run', () => {
     expect(
-      createSuccessResult({
-        dryRun: false,
-        files: ['AGENTS.md', 'README.md'],
-        generatorVersion: '1.2.3',
-        projectDirectory: '/project',
-      }),
+      createSuccessResult(successOptions(false, ['AGENTS.md', 'README.md'])),
     ).toMatchObject({
       created: ['AGENTS.md', 'README.md'],
       dryRun: false,
       ok: true,
-      schemaVersion: 1,
+      packageManagers: { javascript: 'pnpm', python: 'uv' },
+      schemaVersion: 2,
       wouldCreate: [],
     });
   });
 
   it('reports planned files without claiming they were created', () => {
     expect(
-      createSuccessResult({
-        dryRun: true,
-        files: ['AGENTS.md'],
-        generatorVersion: '1.2.3',
-        projectDirectory: '/project',
-      }),
+      createSuccessResult(successOptions(true, ['AGENTS.md'])),
     ).toMatchObject({
       created: [],
       dryRun: true,
       wouldCreate: ['AGENTS.md'],
     });
+  });
+
+  it('omits install commands after dependencies were installed', () => {
+    const result = createSuccessResult({
+      ...successOptions(false, ['README.md']),
+      dependenciesInstalled: true,
+    });
+
+    expect(result.actions.dependenciesInstalled).toBe(true);
+    expect(result.nextSteps).toEqual([
+      'npx create-spatius-app setup . --interactive',
+      'pnpm run dev',
+    ]);
   });
 
   it('serializes stable error details', () => {
@@ -61,17 +103,12 @@ describe('structured output', () => {
         recovery: 'Choose an empty directory.',
       },
       ok: false,
-      schemaVersion: 1,
+      schemaVersion: 2,
     });
   });
 
   it('keeps success and failure results compatible with the published schema', () => {
-    const success = createSuccessResult({
-      dryRun: false,
-      files: ['AGENTS.md'],
-      generatorVersion: '1.2.3',
-      projectDirectory: '/project',
-    });
+    const success = createSuccessResult(successOptions(false, ['AGENTS.md']));
     const failure = createFailureResult(
       new CliError('INVALID_ARGUMENT', 'Invalid input.', {
         exitCode: EXIT_CODES.invalidArgument,
@@ -88,12 +125,7 @@ describe('structured output', () => {
 
   it('writes exactly one compact JSON document', () => {
     const write = vi.spyOn(process.stdout, 'write').mockReturnValue(true);
-    const result = createSuccessResult({
-      dryRun: true,
-      files: ['AGENTS.md'],
-      generatorVersion: '1.2.3',
-      projectDirectory: '/project',
-    });
+    const result = createSuccessResult(successOptions(true, ['AGENTS.md']));
 
     writeJsonResult(result);
 

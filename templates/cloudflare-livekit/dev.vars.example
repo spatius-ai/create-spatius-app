@@ -1,0 +1,12 @@
+# Used by the Cloudflare Worker during local development.
+# Standard voices: Jacqueline (feminine); Blake (masculine): a167e0f3-df7e-4d52-a9c3-f949145efdab
+CARTESIA_VOICE_ID=9626c31c-bec5-4cca-baa8-f8ba9e84c8bc
+LIVEKIT_URL=wss://your-project.livekit.cloud
+LIVEKIT_API_KEY=your-livekit-api-key
+LIVEKIT_API_SECRET=your-livekit-api-secret
+LIVEKIT_AGENT_NAME=spatius-agent
+SPATIUS_APP_ID=your-spatius-app-id
+SPATIUS_AVATAR_ID=your-spatius-avatar-id
+
+# Optional public image URL, filled automatically when selecting a public avatar.
+SPATIUS_AVATAR_BACKGROUND_URL=
