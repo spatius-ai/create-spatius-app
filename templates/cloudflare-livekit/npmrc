@@ -1,4 +1,1 @@
-auto-install-peers=false
-prefer-frozen-lockfile=true
 save-exact=true
-strict-peer-dependencies=true
