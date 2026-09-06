@@ -115,7 +115,12 @@ def record(destination):
             else:
                 raise TimeoutError(f"Onboarding stalled at scripted prompt {step + 1}.")
             child.wait(timeout=3)
-            if child.returncode != 0 or step != len(steps) or "Ready. Next:" not in transcript:
+            if (
+                child.returncode != 0
+                or step != len(steps)
+                or "Ready!" not in transcript
+                or "Next steps:" not in transcript
+            ):
                 raise RuntimeError(f"Onboarding did not complete (exit {child.returncode}, step {step}).")
         finally:
             if child.poll() is None:

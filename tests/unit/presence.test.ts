@@ -90,7 +90,7 @@ describe('Presence artwork', () => {
     });
     await presence.welcome();
     expect(chunks).toHaveLength(1);
-    expect(chunks[0]).toContain('spatius');
+    expect(chunks[0]).toContain('Spatius');
     expect(chunks[0]).not.toContain('\u001b');
     expect(vi.getTimerCount()).toBe(0);
   });
@@ -112,8 +112,76 @@ describe('Presence artwork', () => {
     await vi.advanceTimersByTimeAsync(2000);
     expect(chunks).toHaveLength(count);
     expect(vi.getTimerCount()).toBe(0);
+    expect(output.listenerCount('resize')).toBe(1);
+    presence.stop();
     expect(output.listenerCount('resize')).toBe(0);
   });
+
+  it('resumes the welcome above completed prompts and restores the output writer', async () => {
+    vi.useFakeTimers();
+    const { output, chunks } = terminal();
+    const write = vi.spyOn(output, 'write');
+    const presence = new Presence({
+      interactive: true,
+      output,
+      environment: {},
+      theme: createTerminalTheme(false),
+    });
+    const welcome = presence.welcome();
+    await vi.advanceTimersByTimeAsync(1000);
+    await welcome;
+    output.write(
+      'Which package manager?\n● pnpm\n↑/↓ to navigate • Enter: confirm\n',
+    );
+    output.write('\u001b[3');
+    output.write('A\r\u001b[J◇ Which package manager?\npnpm\n');
+    presence.start('Installing JavaScript dependencies');
+    expect(chunks.at(-1)?.startsWith('\u001b7\u001b[14A\r')).toBe(true);
+    expect(chunks.at(-1)).toContain('Spatius');
+    expect(chunks.at(-1)?.endsWith('\u001b8')).toBe(true);
+    presence.message('Installing Python dependencies');
+    await vi.advanceTimersByTimeAsync(100);
+    expect(chunks.at(-1)).toContain('Installing Python dependencies');
+    presence.stop('Dependencies installed');
+    expect(chunks.at(-1)).toContain('Dependencies installed');
+    expect(output).toHaveProperty('write', write);
+    expect(output.listenerCount('resize')).toBe(0);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it.each(['resize', 'scroll', 'wide input', 'clear screen'])(
+    'uses status text without duplicate art when the welcome anchor is lost: %s',
+    async (reason) => {
+      vi.useFakeTimers();
+      const { output, chunks } = terminal();
+      const write = vi.spyOn(output, 'write');
+      const presence = new Presence({
+        interactive: true,
+        output,
+        environment: {},
+        theme: createTerminalTheme(false),
+      });
+      const welcome = presence.welcome();
+      await vi.advanceTimersByTimeAsync(1000);
+      await welcome;
+      if (reason === 'resize') output.emit('resize');
+      if (reason === 'scroll') output.write('answer\n'.repeat(30));
+      if (reason === 'wide input') output.write('项目');
+      if (reason === 'clear screen') output.write('\u001b[2J');
+      const count = chunks.length;
+      presence.start('Installing JavaScript dependencies');
+      presence.message('Installing Python dependencies');
+      presence.stop('Dependencies installed');
+      expect(chunks.slice(count)).toEqual([
+        'Installing JavaScript dependencies\n',
+        'Installing Python dependencies\n',
+        'Dependencies installed\n',
+      ]);
+      expect(output).toHaveProperty('write', write);
+      expect(output.listenerCount('resize')).toBe(0);
+      expect(vi.getTimerCount()).toBe(0);
+    },
+  );
 
   it('updates installation status and stops drawing on completion or failure', () => {
     vi.useFakeTimers();
