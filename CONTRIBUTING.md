@@ -12,11 +12,11 @@ registered template's package-manager variants.
 
 ## Terminal recordings
 
-Every pull request runs the **Terminal preview / Onboarding recording** job.
-Open that check and use the download link in its job summary to get an MP4,
-animated GIF, and replayable `.cast` transcript. Recordings are retained for
-30 days and are not committed to the repository. This workflow also supports
-manual runs from GitHub Actions.
+Generate terminal previews on demand when reviewing CLI presentation changes.
+Recordings run locally, are not part of CI, and are not committed to the
+repository. Coding agents can follow the
+[terminal recording workflow](skills/record-terminal.md) to create and share
+a preview from their coding environment.
 
 To record locally on macOS or Linux, install Python 3, [agg 1.9.0](https://github.com/asciinema/agg),
 and FFmpeg, then run `pnpm terminal:record`. Files are written under
