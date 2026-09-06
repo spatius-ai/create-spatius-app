@@ -14,6 +14,7 @@ import { delimiter, join, relative, resolve } from 'node:path';
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { promisify } from 'node:util';
+import { pathToFileURL } from 'node:url';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
@@ -37,7 +38,13 @@ async function runCli(
 ): Promise<{ stderr: string; stdout: string }> {
   return execFileAsync(process.execPath, [cliPath, ...arguments_], {
     cwd: currentWorkingDirectory,
-    env: { ...process.env, ...environment, NO_COLOR: '1' },
+    env: {
+      ...process.env,
+      HOME: currentWorkingDirectory,
+      USERPROFILE: currentWorkingDirectory,
+      ...environment,
+      NO_COLOR: '1',
+    },
   });
 }
 
@@ -86,12 +93,38 @@ async function runSpawnedCli(
   input?: string,
   environment: NodeJS.ProcessEnv = {},
 ): Promise<{ code: number | null; stderr: string; stdout: string }> {
+  const preload = join(
+    await createTemporaryDirectory(),
+    'mock-livekit-fetch.mjs',
+  );
+  await writeFile(
+    preload,
+    `
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = (input, options) => {
+      if (String(input) === 'https://e2e.livekit.cloud/twirp/livekit.RoomService/ListRooms') {
+        return Promise.resolve(new Response('{}', { status: 200 }));
+      }
+      return originalFetch(input, options);
+    };
+  `,
+  );
   return new Promise((resolvePromise, reject) => {
-    const child = spawn(process.execPath, [cliPath, ...arguments_], {
-      cwd: currentWorkingDirectory,
-      env: { ...process.env, ...environment, NO_COLOR: '1' },
-      stdio: ['pipe', 'pipe', 'pipe'],
-    });
+    const child = spawn(
+      process.execPath,
+      ['--import', pathToFileURL(preload).href, cliPath, ...arguments_],
+      {
+        cwd: currentWorkingDirectory,
+        env: {
+          ...process.env,
+          HOME: currentWorkingDirectory,
+          USERPROFILE: currentWorkingDirectory,
+          ...environment,
+          NO_COLOR: '1',
+        },
+        stdio: ['pipe', 'pipe', 'pipe'],
+      },
+    );
     let stderr = '';
     let stdout = '';
 

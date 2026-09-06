@@ -1,6 +1,8 @@
+import { createHmac } from 'node:crypto';
 import { spawn, type ChildProcess } from 'node:child_process';
 import { chmod, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { homedir, tmpdir } from 'node:os';
+import { parse } from 'yaml';
 import { join } from 'node:path';
 
 import { PromptCancelledError } from '../errors.js';
@@ -17,6 +19,57 @@ export interface LiveKitCliProbe {
   version?: string;
 }
 
+export interface LiveKitProject {
+  name: string;
+  url: string;
+  isDefault: boolean;
+}
+
+// Read only display metadata; never expose stored keys or YAML parser errors.
+export async function readLiveKitProjects(
+  configPath = join(homedir(), '.livekit', 'cli-config.yaml'),
+): Promise<LiveKitProject[]> {
+  try {
+    const config: unknown = parse(await readFile(configPath, 'utf8'));
+    if (config == null) return [];
+    if (
+      typeof config !== 'object' ||
+      !('projects' in config) ||
+      !Array.isArray(config.projects)
+    )
+      throw new Error();
+    return config.projects.map((project: Record<string, unknown>) => {
+      if (
+        typeof project?.name !== 'string' ||
+        !/^[a-zA-Z0-9_-]+$/u.test(project.name) ||
+        typeof project.url !== 'string'
+      )
+        throw new Error();
+      const url = new URL(project.url);
+      if (
+        !['ws:', 'wss:', 'http:', 'https:'].includes(url.protocol) ||
+        url.username ||
+        url.password ||
+        url.search ||
+        url.hash
+      )
+        throw new Error();
+      return {
+        name: project.name,
+        url: url.toString().replace(/\/$/u, ''),
+        isDefault:
+          'default_project' in config &&
+          project.name === config.default_project,
+      };
+    });
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return [];
+    // YAML parser errors can contain the API secret from the source line.
+    // eslint-disable-next-line preserve-caught-error
+    throw new Error('Saved LiveKit projects could not be read.');
+  }
+}
+
 interface CapturedCommandOptions {
   cwd?: string;
   timeoutMs?: number;
@@ -24,6 +77,7 @@ interface CapturedCommandOptions {
 
 interface InteractiveCommandOptions {
   cwd: string;
+  env?: NodeJS.ProcessEnv;
 }
 
 export interface LiveKitCommandRunner {
@@ -118,12 +172,13 @@ function captureCommand(
 function interactiveCommand(
   command: string,
   args: readonly string[],
-  { cwd }: InteractiveCommandOptions,
+  { cwd, env }: InteractiveCommandOptions,
 ): Promise<void> {
   return new Promise((resolvePromise, reject) => {
     const invocation = createProcessInvocation(command, args);
     const child = spawn(invocation.command, invocation.args, {
       cwd,
+      ...(env === undefined ? {} : { env }),
       stdio: 'inherit',
       windowsHide: true,
     });
@@ -198,8 +253,10 @@ export async function probeLiveKitCli(
 
 export function createLiveKitEnvArguments(
   temporaryDirectory: string,
+  projectName?: string,
 ): string[] {
   return [
+    ...(projectName === undefined ? [] : ['--project', projectName]),
     'app',
     'env',
     '--write',
@@ -234,6 +291,7 @@ const defaultTemporaryFileSystem: LiveKitTemporaryFileSystem = {
 };
 
 interface LoadLiveKitCredentialsOptions {
+  projectName?: string;
   fileSystem?: LiveKitTemporaryFileSystem;
   runner?: LiveKitCommandRunner;
   temporaryRoot?: string;
@@ -243,6 +301,7 @@ export async function loadLiveKitCredentialsWithCli({
   fileSystem = defaultTemporaryFileSystem,
   runner = defaultLiveKitCommandRunner,
   temporaryRoot = tmpdir(),
+  projectName,
 }: LoadLiveKitCredentialsOptions = {}): Promise<LiveKitCredentials> {
   const directory = await fileSystem.mkdtemp(
     join(temporaryRoot, 'create-spatius-app-livekit-'),
@@ -255,9 +314,22 @@ export async function loadLiveKitCredentialsWithCli({
       'LIVEKIT_URL=\nLIVEKIT_API_KEY=\nLIVEKIT_API_SECRET=\n',
       0o600,
     );
-    await runner.interactive('lk', createLiveKitEnvArguments(directory), {
-      cwd: directory,
-    });
+    await runner.interactive(
+      'lk',
+      createLiveKitEnvArguments(directory, projectName),
+      {
+        cwd: directory,
+        ...(projectName === undefined
+          ? {}
+          : {
+              env: Object.fromEntries(
+                Object.entries(process.env).filter(
+                  ([name]) => !name.startsWith('LIVEKIT_'),
+                ),
+              ),
+            }),
+      },
+    );
     const values = parseDotenv(
       await fileSystem.readFile(join(directory, '.env.local')),
     );
@@ -286,5 +358,83 @@ export async function loadLiveKitCredentialsWithCli({
         'The temporary LiveKit credential directory could not be removed.',
       );
     });
+  }
+}
+
+export class LiveKitCredentialProbeError extends Error {}
+
+/** Verify the exact pair we will save, without creating a room. */
+export async function verifyLiveKitCredentials(
+  credentials: LiveKitCredentials,
+  fetcher: typeof fetch = fetch,
+): Promise<void> {
+  const url = new URL(credentials.url);
+  if (
+    !['https:', 'wss:'].includes(url.protocol) ||
+    url.username ||
+    url.password ||
+    url.search ||
+    url.hash
+  ) {
+    throw new LiveKitCredentialProbeError(
+      'LiveKit verification requires a clean https:// or wss:// URL.',
+    );
+  }
+  url.protocol = 'https:';
+  url.pathname = `${url.pathname.replace(/\/$/u, '')}/twirp/livekit.RoomService/ListRooms`;
+  const encode = (value: unknown) =>
+    Buffer.from(JSON.stringify(value)).toString('base64url');
+  const now = Math.floor(Date.now() / 1000);
+  const unsigned = `${encode({ alg: 'HS256', typ: 'JWT' })}.${encode({
+    iss: credentials.apiKey,
+    nbf: now - 5,
+    exp: now + 60,
+    video: { roomList: true },
+  })}`;
+  const signature = createHmac('sha256', credentials.apiSecret)
+    .update(unsigned)
+    .digest('base64url');
+  let response: Response;
+  try {
+    response = await fetcher(url, {
+      method: 'POST',
+      redirect: 'error',
+      signal: AbortSignal.timeout(8000),
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${unsigned}.${signature}`,
+      },
+      body: '{}',
+    });
+  } catch {
+    throw new LiveKitCredentialProbeError(
+      'Could not reach LiveKit to verify credentials (network, TLS, or timeout). Retry when connected.',
+    );
+  }
+  // Never surface a provider response, which could contain sensitive data.
+  if (!response.ok) await response.body?.cancel().catch(() => undefined);
+  if (response.status === 401 || response.status === 403) {
+    throw new LiveKitCredentialProbeError(
+      'LiveKit rejected these credentials. The key may be revoked, rotated, or belong to another project. Reconnect or enter another pair.',
+    );
+  }
+  if (!response.ok) {
+    throw new LiveKitCredentialProbeError(
+      `LiveKit verification failed (HTTP ${response.status}). Retry or check the project URL.`,
+    );
+  }
+  try {
+    const result: unknown = await response.json();
+    if (
+      result === null ||
+      typeof result !== 'object' ||
+      Array.isArray(result) ||
+      ('rooms' in result && !Array.isArray(result.rooms))
+    )
+      throw new Error();
+  } catch {
+    throw new LiveKitCredentialProbeError(
+      'LiveKit returned an unexpected verification response. Check the project URL and retry.',
+    );
   }
 }

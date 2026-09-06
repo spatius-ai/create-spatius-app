@@ -1,3 +1,4 @@
+import { createHmac } from 'node:crypto';
 import { access, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -10,6 +11,8 @@ import {
   defaultLiveKitCommandRunner,
   loadLiveKitCredentialsWithCli,
   probeLiveKitCli,
+  readLiveKitProjects,
+  verifyLiveKitCredentials,
   type LiveKitCommandRunner,
 } from '../../src/setup/livekit.js';
 
@@ -241,5 +244,102 @@ describe('default command runner', () => {
     } finally {
       await rm(cwd, { force: true, recursive: true });
     }
+  });
+});
+
+describe('saved LiveKit projects', () => {
+  it('returns display metadata and default without exposing credentials', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'lk-projects-'));
+    const path = join(directory, 'cli-config.yaml');
+    try {
+      await expect(readLiveKitProjects(path)).resolves.toEqual([]);
+      await writeFile(
+        path,
+        'default_project: production\nprojects:\n  - name: production\n    url: wss://prod.livekit.cloud\n    api_key: hidden-key\n    api_secret: hidden-secret\n  - name: staging\n    url: wss://stage.livekit.cloud\n',
+      );
+      await expect(readLiveKitProjects(path)).resolves.toEqual([
+        {
+          name: 'production',
+          url: 'wss://prod.livekit.cloud',
+          isDefault: true,
+        },
+        { name: 'staging', url: 'wss://stage.livekit.cloud', isDefault: false },
+      ]);
+      await writeFile(path, 'projects: [hidden-secret');
+      await expect(readLiveKitProjects(path)).rejects.toThrow(
+        'Saved LiveKit projects could not be read.',
+      );
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+  it('passes the selected project explicitly without changing the CLI default', () => {
+    expect(createLiveKitEnvArguments('/temp', 'staging').slice(0, 4)).toEqual([
+      '--project',
+      'staging',
+      'app',
+      'env',
+    ]);
+  });
+});
+
+describe('LiveKit credential verification', () => {
+  const credentials = {
+    url: 'wss://demo.livekit.cloud',
+    apiKey: 'test-key',
+    apiSecret: 'test-secret',
+  };
+  it('signs a short-lived read-only request using the exact configured pair', async () => {
+    const fetcher = vi.fn<typeof fetch>(async () => new Response('{}'));
+    await verifyLiveKitCredentials(credentials, fetcher);
+    const [url, options] = fetcher.mock.calls[0]!;
+    expect((url as URL).href).toBe(
+      'https://demo.livekit.cloud/twirp/livekit.RoomService/ListRooms',
+    );
+    expect(options).toMatchObject({
+      method: 'POST',
+      redirect: 'error',
+      body: '{}',
+    });
+    const token = (
+      options!.headers as Record<string, string>
+    ).Authorization!.slice(7);
+    const [header, payload, signature] = token.split('.');
+    const claims = JSON.parse(
+      Buffer.from(payload!, 'base64url').toString(),
+    ) as { exp: number; nbf: number };
+    expect(claims).toMatchObject({
+      iss: credentials.apiKey,
+      video: { roomList: true },
+    });
+    expect(claims.exp - claims.nbf).toBe(65);
+    expect(signature).toBe(
+      createHmac('sha256', credentials.apiSecret)
+        .update(`${header}.${payload}`)
+        .digest('base64url'),
+    );
+    expect(options!.signal).toBeInstanceOf(AbortSignal);
+  });
+  it.each([401, 403, 429, 500, 302])(
+    'rejects HTTP %s without leaking response content',
+    async (status) => {
+      await expect(
+        verifyLiveKitCredentials(
+          credentials,
+          async () => new Response('hidden-secret', { status }),
+        ),
+      ).rejects.toThrow(
+        status === 401 || status === 403
+          ? /rejected these credentials/u
+          : /verification failed/u,
+      );
+    },
+  );
+  it('distinguishes network failure from invalid credentials', async () => {
+    await expect(
+      verifyLiveKitCredentials(credentials, async () => {
+        throw new Error('hidden-secret');
+      }),
+    ).rejects.toThrow(/network, TLS, or timeout/u);
   });
 });
