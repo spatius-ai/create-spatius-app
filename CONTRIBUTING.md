@@ -1,6 +1,7 @@
 # Contributing
 
-Before the first npm release, follow the
+For npm setup and beta/stable publishing, follow [the release guide](RELEASING.md).
+After the first stable npm release, complete the
 [release documentation checklist](RELEASE_CHECKLIST.md).
 
 Use Node.js 22 or newer and the pnpm version pinned in `package.json`. Read
