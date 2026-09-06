@@ -10,6 +10,28 @@ end-to-end, and package checks. Run `pnpm template:check` when changing template
 assets or an adapter; it generates temporary projects and fully verifies each
 registered template's package-manager variants.
 
+## Terminal recordings
+
+Every pull request runs the **Terminal preview / Onboarding recording** job.
+Open that check and use the download link in its job summary to get an MP4,
+animated GIF, and replayable `.cast` transcript. Recordings are retained for
+30 days and are not committed to the repository. This workflow also supports
+manual runs from GitHub Actions.
+
+To record locally on macOS or Linux, install Python 3, [agg 1.9.0](https://github.com/asciinema/agg),
+and FFmpeg, then run `pnpm terminal:record`. Files are written under
+`test-results/terminal/`. Set `AGG` to an executable path if agg is not on PATH.
+For a transcript without rendering tools, run `pnpm build` followed by
+`python3 scripts/record-terminal.py`.
+
+The recorder runs the actual built CLI in an 80 × 30 pseudo-terminal. It waits
+for each prompt before typing scripted answers and fails if onboarding stalls
+or does not finish. Dependency commands are offline stubs with short delays;
+credential setup is skipped. It exercises presentation, not real installation
+or provider authentication. The recording uses a temporary project and an
+isolated environment without local credentials. Update the prompt/answer script
+when intentionally changing the onboarding flow.
+
 ## Internal template entries
 
 `src/templates.ts` defines a typed registry with one current entry,

@@ -16,6 +16,7 @@
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm dependencies:check && pnpm test:coverage && pnpm test:dev && pnpm test:e2e && pnpm package:check",
     "dependencies:check": "pnpm peers check",
     "dev": "tsx src/cli.ts",
+    "terminal:record": "pnpm build && python3 scripts/record-terminal.py --render",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
