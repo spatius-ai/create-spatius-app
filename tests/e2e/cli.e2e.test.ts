@@ -17,6 +17,8 @@ import { promisify } from 'node:util';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { documentedSkillCommands } from '../skill-fixtures.js';
+
 const execFileAsync = promisify(execFile);
 const cliPath = resolve('dist/cli.js');
 const temporaryDirectories: string[] = [];
@@ -1173,16 +1175,18 @@ describe('built CLI', () => {
     await createFakeExecutable(fakePath, 'npm', '11.9.0', 7);
     await createFakeExecutable(fakePath, 'uv', '0.12.9');
 
+    const commands = await documentedSkillCommands();
+    const installCommand = commands.find(
+      (args) => args.includes('--install') && !args.includes('--dry-run'),
+    )!;
     const result = await runSpawnedCli(
-      [
-        'failed-install-app',
-        '--package-manager',
-        'npm',
-        '--python-package-manager',
-        'uv',
-        '--install',
-        '--json',
-      ],
+      installCommand.map((arg) =>
+        arg === 'pnpm'
+          ? 'npm'
+          : arg === 'my-spatius-app'
+            ? 'failed-install-app'
+            : arg,
+      ),
       root,
       undefined,
       { PATH: fakePath },
