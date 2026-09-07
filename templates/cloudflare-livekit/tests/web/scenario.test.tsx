@@ -63,6 +63,7 @@ it('interrupts the simulated audience before entering free conversation', async 
   expect(actions.speak).toHaveBeenCalledTimes(1);
   await act(async () => {
     fireEvent.click(screen.getByRole('button', { name: 'Talk with host' }));
+    await Promise.resolve();
   });
   expect(actions.interrupt).toHaveBeenCalledTimes(1);
   expect(actions.setMode).toHaveBeenCalledWith('free-talk');
