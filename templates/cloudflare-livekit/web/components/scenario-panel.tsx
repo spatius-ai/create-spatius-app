@@ -154,10 +154,10 @@ export function ScenarioPanel({
             disabled={!ready}
             onClick={() => {
               const next = !talking;
-              setTalking(next);
               run(async () => {
                 await controls.interrupt();
                 await controls.setMode(next ? 'free-talk' : 'scripted');
+                setTalking(next);
               });
             }}
           >

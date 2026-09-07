@@ -1,5 +1,5 @@
 import { ScenarioPanel } from './scenario-panel.js';
-import type { ConversationControls } from '../scenario.js';
+import { scenario, type ConversationControls } from '../scenario.js';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ConnectionState, Track } from 'livekit-client';
 import {
@@ -171,7 +171,12 @@ function ConversationContent({
   }, [attempt]);
 
   useEffect(() => {
-    if (!ready || microphoneRequested.current || attempt.abort.signal.aborted)
+    if (
+      scenario === 'live-streaming' ||
+      !ready ||
+      microphoneRequested.current ||
+      attempt.abort.signal.aborted
+    )
       return;
     microphoneRequested.current = true;
     void toggleMicrophone(true);
@@ -242,6 +247,7 @@ function ConversationContent({
     },
     setMode: async (mode) => {
       await command('mode', { mode });
+      await attempt.setMicrophone(mode === 'free-talk');
     },
   };
   async function command(method: string, payload: object) {
