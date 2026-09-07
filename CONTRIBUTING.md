@@ -73,7 +73,11 @@ To add a future internal entry:
    from a directory outside the repository.
 
 The `pnpm template:test:e2e` command builds the CLI and runs Chromium
-tests after the pnpm/uv JavaScript checks for each entry. It installs Chromium
+tests after the pnpm/uv JavaScript checks for minimal LiveKit entries.
+Scenario controls have separate generated unit tests. CI runs each stack/scenario
+as a separate job to keep the expanded catalog within its time budget.
+To verify one entry locally, run `pnpm build` followed by
+`node scripts/check-template.mjs --template railway-livekit/companion`. It installs Chromium
 (including system dependencies on Linux), retains output under
 `test-results/<id>/`, and continues the normal full verification. Use it when
 the generated template includes Playwright configuration and `test:e2e`.

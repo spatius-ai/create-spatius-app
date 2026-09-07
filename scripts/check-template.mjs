@@ -3,7 +3,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { promisify } from 'node:util';
+import { parseArgs, promisify } from 'node:util';
 
 import {
   createProcessInvocation,
@@ -15,12 +15,15 @@ import {
 
 const execFileAsync = promisify(execFile);
 const repositoryRoot = fileURLToPath(new URL('../', import.meta.url));
-const browser = process.argv.slice(2).includes('--browser');
-const unknownOptions = process.argv
-  .slice(2)
-  .filter((option) => option !== '--browser');
-if (unknownOptions.length > 0)
-  throw new Error('Unknown verification option: ' + unknownOptions.join(', '));
+const { values } = parseArgs({
+  options: { browser: { type: 'boolean' }, template: { type: 'string' } },
+});
+const browser = values.browser ?? false;
+if (values.template && !Object.hasOwn(templateRegistry, values.template))
+  throw new Error('Unknown template: ' + values.template);
+const selectedTemplates = values.template
+  ? [templateRegistry[values.template]]
+  : Object.values(templateRegistry);
 const temporaryRoot = await mkdtemp(join(tmpdir(), 'create-spatius-template-'));
 
 async function run(command, arguments_, cwd) {
@@ -74,6 +77,7 @@ async function verify(template, variant) {
     await run(variant.javascript, ['run', script], generatedProject);
     if (
       browser &&
+      template.scenario === 'minimal' &&
       variant.javascript === 'pnpm' &&
       variant.python === 'uv' &&
       script === 'check'
@@ -103,7 +107,7 @@ async function verify(template, variant) {
 }
 
 try {
-  for (const template of Object.values(templateRegistry)) {
+  for (const template of selectedTemplates) {
     if (template.verification.length === 0) {
       throw new Error('No verification variants defined for ' + template.id);
     }

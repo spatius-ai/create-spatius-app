@@ -66,9 +66,33 @@ jobs:
           fail-on-severity: high
 
   template:
-    name: Generated application template
+    name: Template / ${{ matrix.template }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        template:
+          - cloudflare-livekit/minimal
+          - cloudflare-livekit/tutoring
+          - cloudflare-livekit/live-streaming
+          - cloudflare-livekit/customer-service
+          - cloudflare-livekit/companion
+          - cloudflare-livekit-railway/minimal
+          - cloudflare-livekit-railway/tutoring
+          - cloudflare-livekit-railway/live-streaming
+          - cloudflare-livekit-railway/customer-service
+          - cloudflare-livekit-railway/companion
+          - railway-livekit-cloud/minimal
+          - railway-livekit-cloud/tutoring
+          - railway-livekit-cloud/live-streaming
+          - railway-livekit-cloud/customer-service
+          - railway-livekit-cloud/companion
+          - railway-livekit/minimal
+          - railway-livekit/tutoring
+          - railway-livekit/live-streaming
+          - railway-livekit/customer-service
+          - railway-livekit/companion
 
     steps:
       - name: Check out repository
@@ -92,12 +116,12 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Generate and verify application and browser interactions
-        run: pnpm template:test:e2e
+        run: pnpm build && node scripts/check-template.mjs --browser --template "${{ matrix.template }}"
 
       - name: Upload browser failure artifacts
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: template-browser-results
+          name: template-browser-results-${{ strategy.job-index }}
           path: test-results/
           if-no-files-found: ignore
