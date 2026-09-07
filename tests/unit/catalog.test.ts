@@ -99,6 +99,11 @@ describe('stack and scenario catalog', () => {
       const node = stack.startsWith('railway');
       expect(result.files.includes('server/index.ts')).toBe(node);
       expect(result.files.includes('wrangler.jsonc')).toBe(!node);
+      if (node && scenario === 'companion') {
+        expect(
+          await readFile(join(directory, 'server/index.ts'), 'utf8'),
+        ).toContain("import { database } from './database.js'");
+      }
       expect(result.files.includes('migrations/0001_memory.sql')).toBe(
         scenario === 'companion',
       );

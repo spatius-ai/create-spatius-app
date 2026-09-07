@@ -154,8 +154,8 @@ export function composeTemplate(
             serverPath,
             (await readFile(serverPath, 'utf8'))
               .replace(
-                'import { createServer }',
-                "import { database } from './database.js';\nimport { createServer }",
+                'import { handleRequest }',
+                "import { database } from './database.js';\nimport { handleRequest }",
               )
               .replace(
                 'process.env as unknown as CloudflareBindings',

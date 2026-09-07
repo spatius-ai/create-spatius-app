@@ -177,7 +177,7 @@ describe('packed CLI', () => {
       ids: expect.arrayContaining([
         'cloudflare-livekit/minimal',
         'railway-livekit/companion',
-      ]),
+      ]) as unknown,
       selected: 'cloudflare-livekit/minimal',
       directory: await realpath(
         join(packageRoot, 'templates/cloudflare-livekit'),
