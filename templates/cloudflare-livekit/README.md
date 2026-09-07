@@ -28,6 +28,22 @@ npx create-spatius-app setup . --interactive
 Follow the prompts to connect LiveKit and Spatius, select an avatar, and choose
 a matching voice. This configures local development only, not deployment.
 
+#### Manual credential setup
+
+Alternatively, copy `.dev.vars.example` to `.dev.vars` and
+`agent/.env.example` to `agent/.env.local`, then edit the copies locally:
+
+- Use the same LiveKit Cloud project’s `LIVEKIT_URL`, `LIVEKIT_API_KEY`, and
+  `LIVEKIT_API_SECRET` in both files.
+- Set the same `SPATIUS_APP_ID` in both files and set `SPATIUS_API_KEY` in
+  `agent/.env.local` to a key for that app.
+- In `.dev.vars`, set `SPATIUS_AVATAR_ID` to your chosen avatar.
+  `SPATIUS_AVATAR_BACKGROUND_URL` is optional and can stay empty. Keep the
+  example `CARTESIA_VOICE_ID` to use the default voice.
+
+Keep the example `LIVEKIT_AGENT_NAME` so the Worker dispatches the bundled
+agent. Both credential files are ignored by Git; keep their values local.
+
 ### 3. Start the app
 
 ```sh

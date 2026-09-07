@@ -1,27 +1,24 @@
-# First-release documentation checklist
+# Release verification checklist
 
-Maintainer checklist for replacing temporary pre-release guidance once the CLI
-is published. Keep this material out of the onboarding README.
+Use this maintainer checklist for each release. Keep this material out of the
+onboarding README. Record verification results with the release or pull request.
 
-## Update after publication
+## Verify after publication
 
-- [ ] Verify the intended npm release is available and
-      `npx create-spatius-app --version` resolves to it before removing any
-      availability warnings.
-- [ ] Remove the preview/publication notice from [README.md](README.md).
-- [ ] Remove the historical **Release prerequisite** paragraph from
-      [the skill](skills/create-spatius-app/SKILL.md). Keep brief guidance for
-      registry failures.
+- [ ] Verify npm dist-tags and confirm `npx create-spatius-app --version`
+      resolves to the intended stable release. For a prerelease, check `@beta`
+      explicitly and confirm `latest` still points to the intended stable version.
 - [ ] Verify the skill is on the default branch and can be discovered using
       `npx skills add spatius-ai/create-spatius-app --list`. Confirm the documented
       `--skill create-spatius-app` installation works in an isolated test location.
 - [ ] Smoke-test the public CLI from outside a checkout: help/version, JSON
-      dry-run, and scaffold-only creation. Verify the generated setup command
-      resolves the published CLI; browser authentication remains a separate,
-      explicitly approved human smoke test.
+      dry-run, and scaffold-only creation. Set `--no-install`, `--no-setup`, and
+      `--no-interactive` explicitly. Verify setup command resolution with
+      `setup --help`; browser authentication remains a separate, explicitly
+      approved human smoke test.
 
-The public commands are already written correctly; publication makes them
-available rather than changing their spelling. Review these locations together:
+Review these public command locations together. Use `@beta` for prerelease
+smoke tests; keep onboarding examples on the stable command:
 
 | Command                                                                   | Locations to verify                                                                                        |
 | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |

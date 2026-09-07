@@ -14,8 +14,9 @@ creating anything; there is no public template picker yet.
 
 ## 1. Choose the invocation and destination
 
-- Require Node.js 22 or newer. Check available tools with bounded version
-  probes; do not install system tools or provider CLIs implicitly.
+- The CLI requires Node.js 22+; running the generated app requires Node.js
+  22.12+ and Python 3.11–3.14. Check available tools with bounded version probes;
+  do not install system tools or provider CLIs implicitly.
 - Use the published npm CLI. Check its version and help before creating:
 
   ```sh
@@ -23,10 +24,9 @@ creating anything; there is no public template picker yet.
   npx create-spatius-app --help
   ```
 
-  **Release prerequisite:** this CLI was unpublished when this skill was added.
-  If npm cannot resolve it, report whether publication, network access, or
-  authentication is blocking setup. Do not clone or build the generator as a
-  fallback. Reuse the same CLI version for this entire setup.
+  If npm cannot resolve it, report the registry, network, or authentication
+  error that blocks setup. Do not clone or build the generator as a fallback.
+  Reuse the same CLI version for this entire setup.
 
 - Respect the requested destination. If unspecified, propose `my-spatius-app`
   in the intended parent directory. Use `.` only when that directory is empty;
