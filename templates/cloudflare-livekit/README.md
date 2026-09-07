@@ -53,3 +53,28 @@ __SPATIUS_DEV_COMMAND__
 This starts the Python agent first, then starts the frontend and Cloudflare
 Worker once the agent has registered with LiveKit. If registration takes more
 than 60 seconds, startup stops with an error.
+
+## Validate without credentials
+
+After installing both dependency sets, you can run these checks before account
+setup. Run them from the project root:
+
+```sh
+__SPATIUS_CHECK_COMMAND__
+__SPATIUS_AGENT_CHECK_COMMAND__
+```
+
+These check formatting, lint, types, unit tests, development-process behavior,
+and the production build. They do not require LiveKit or Spatius credentials.
+
+Browser tests use mocked services and also run without credentials:
+
+```sh
+npx playwright install chromium
+__SPATIUS_E2E_COMMAND__
+```
+
+The first command downloads Chromium if needed. On Linux, use
+`npx playwright install --with-deps chromium` to also install required system
+libraries. These tests verify the local UI flow; a real voice-avatar
+conversation still requires account setup and starting the app.

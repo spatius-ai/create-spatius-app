@@ -155,9 +155,21 @@ describe('packed CLI', () => {
       template: string;
       nextSteps: string[];
     };
-    expect(result).toMatchObject({ ok: true, template: 'default' });
+    expect(result).toMatchObject({
+      ok: true,
+      template: 'default',
+      schemaVersion: 3,
+      humanSteps: [{ requiresHuman: true, requiresTty: true }],
+    });
     expect(result.nextSteps).toContain('npm run dev');
     const packageRoot = join(installation, 'node_modules/create-spatius-app');
+    const schema = JSON.parse(
+      await readFile(
+        join(packageRoot, 'schemas/result-v3.schema.json'),
+        'utf8',
+      ),
+    ) as { title: string };
+    expect(schema.title).toBe('create-spatius-app result v3');
     const registryResult = await execFileAsync(
       process.execPath,
       [

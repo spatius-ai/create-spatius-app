@@ -96,7 +96,7 @@ describe('skill command examples against the built CLI', () => {
         (await run(creationArgs, root)).stdout,
       ) as SuccessResult;
       expect(created).toMatchObject({
-        schemaVersion: 2,
+        schemaVersion: 3,
         ok: true,
         dryRun: false,
         packageManagers: { javascript, python },
