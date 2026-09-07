@@ -65,10 +65,18 @@ after `v0.1.0-beta.2`.
    ```
 
    For a prerelease, use `create-spatius-app@beta` in both commands. Confirm the
-   selected channel resolves to the version just published and complete
-   [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md). Repository README and template
-   edits ship to npm with a new package release; they do not update older
-   package versions or previously generated projects.
+   selected channel resolves to the version just published. Smoke-test JSON
+   dry-run and scaffold-only creation with `--no-install`, `--no-setup`, and
+   `--no-interactive`, then check `setup --help`. For prereleases, also confirm
+   `latest` still points to the intended stable version.
+
+6. Verify skill discovery with
+   `npx skills add spatius-ai/create-spatius-app --list` and test the README’s
+   skill-install command in an isolated project. Record the verification results
+   with the release. Browser authentication is a separate human smoke test.
+
+Repository README and template edits ship to npm with a new package release;
+they do not update older package versions or previously generated projects.
 
 ## Trusted-publisher configuration reference
 

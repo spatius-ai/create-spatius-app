@@ -1,8 +1,6 @@
 # Contributing
 
 For beta/stable publishing, follow [the release guide](RELEASING.md).
-For each release, complete the
-[release verification checklist](RELEASE_CHECKLIST.md).
 
 Use Node.js 22 or newer and the pnpm version pinned in `package.json`. Read
 `AGENTS.md` before editing, then install with `pnpm install --frozen-lockfile`.
