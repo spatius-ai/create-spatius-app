@@ -54,7 +54,7 @@ async function serve(incoming: IncomingMessage, outgoing: ServerResponse) {
       });
       const response = await handleRequest(
         request,
-        process.env as unknown as CloudflareBindings,
+        process.env,
       );
       outgoing.writeHead(response.status, Object.fromEntries(response.headers));
       outgoing.end(Buffer.from(await response.arrayBuffer()));

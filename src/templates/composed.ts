@@ -163,8 +163,8 @@ export function composeTemplate(
                 "import { database } from './database.js';\nimport { handleRequest }",
               )
               .replace(
-                'process.env as unknown as CloudflareBindings',
-                '{ ...process.env, DB: database } as unknown as CloudflareBindings',
+                '        process.env,',
+                '        { ...process.env, DB: database },',
               ),
           );
           pkg.dependencies.pg = '8.16.3';
