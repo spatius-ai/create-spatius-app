@@ -44,6 +44,8 @@ function baseDependencies(
 ): CredentialSetupDependencies {
   const session = fakeSession();
   return {
+    readLiveKitProjects: async () => [],
+    verifyLiveKitCredentials: async () => undefined,
     authenticateLiveKit: async () => undefined,
     installLiveKit: async () => undefined,
     planLiveKitInstall: async () => undefined,
@@ -613,5 +615,84 @@ describe('credential setup wizard', () => {
     for (const secret of secrets) {
       expect(messages.join('\n')).not.toContain(secret);
     }
+  });
+});
+
+describe('LiveKit project selection and verification', () => {
+  const projects = [
+    { name: 'production', url: 'wss://prod.livekit.cloud', isDefault: true },
+    { name: 'staging', url: 'wss://stage.livekit.cloud', isDefault: false },
+  ];
+  it('shows the default and uses the selected project', async () => {
+    const load = vi.fn(async () => ({
+      apiKey: 'key',
+      apiSecret: 'secret',
+      url: projects[1]!.url,
+    }));
+    const verify = vi.fn(async () => undefined);
+    const prompts = new FakePrompts({
+      choices: ['cli', 'staging', 'saved', 'browser'],
+    });
+    await runCredentialSetup({
+      targetDirectory: '/project',
+      prompts,
+      dependencies: baseDependencies({
+        readLiveKitProjects: async () => projects,
+        loadLiveKitCredentials: load,
+        verifyLiveKitCredentials: verify,
+      }),
+    });
+    expect(prompts.seenOptions[0]![0]!.hint).toContain('Default: production');
+    expect(load).toHaveBeenCalledWith('staging');
+    expect(verify).toHaveBeenCalledWith({
+      apiKey: 'key',
+      apiSecret: 'secret',
+      url: projects[1]!.url,
+    });
+  });
+  it('uses a custom pair for the selected project and verifies before saving', async () => {
+    const load = vi.fn();
+    const verify = vi.fn(async () => undefined);
+    const writeFiles = writeMock();
+    await runCredentialSetup({
+      targetDirectory: '/project',
+      prompts: new FakePrompts({
+        choices: ['cli', 'staging', 'custom', 'browser'],
+        passwords: ['custom-key', 'custom-secret'],
+      }),
+      dependencies: baseDependencies({
+        readLiveKitProjects: async () => projects,
+        loadLiveKitCredentials: load,
+        verifyLiveKitCredentials: verify,
+        writeFiles,
+      }),
+    });
+    expect(load).not.toHaveBeenCalled();
+    expect(verify).toHaveBeenCalledWith({
+      apiKey: 'custom-key',
+      apiSecret: 'custom-secret',
+      url: projects[1]!.url,
+    });
+    expect(verify.mock.invocationCallOrder[0]).toBeLessThan(
+      writeFiles.mock.invocationCallOrder[0]!,
+    );
+  });
+  it('does not save or start Spatius setup after rejected credentials', async () => {
+    const writeFiles = writeMock();
+    const loginToSpatius = vi.fn();
+    const result = await runCredentialSetup({
+      targetDirectory: '/project',
+      prompts: new FakePrompts({ choices: ['cli', 'skip'] }),
+      dependencies: baseDependencies({
+        verifyLiveKitCredentials: async () => {
+          throw new Error('revoked');
+        },
+        writeFiles,
+        loginToSpatius,
+      }),
+    });
+    expect(result).toBe('unchanged');
+    expect(writeFiles).not.toHaveBeenCalled();
+    expect(loginToSpatius).not.toHaveBeenCalled();
   });
 });
