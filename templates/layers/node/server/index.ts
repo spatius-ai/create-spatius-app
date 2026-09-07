@@ -23,7 +23,8 @@ const server = createServer((incoming, outgoing) => {
 });
 async function serve(incoming: IncomingMessage, outgoing: ServerResponse) {
   try {
-    const origin = `http://${incoming.headers.host ?? 'localhost'}`;
+    const scheme = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+    const origin = `${scheme}://${incoming.headers.host ?? 'localhost'}`;
     const url = new URL(incoming.url ?? '/', origin);
     outgoing.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
     outgoing.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');

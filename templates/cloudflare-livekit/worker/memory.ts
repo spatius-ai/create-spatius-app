@@ -1,12 +1,16 @@
-export async function memoryRoute(
+export function memoryRoute(
   _request: Request,
   _env: CloudflareBindings,
 ): Promise<Response | undefined> {
-  return undefined;
+  void _request;
+  void _env;
+  return Promise.resolve(undefined);
 }
-export async function memoryContext(
+export function memoryContext(
   _request: Request,
   _env: CloudflareBindings,
 ): Promise<{ metadata?: Record<string, unknown>; cookie?: string }> {
-  return {};
+  void _request;
+  void _env;
+  return Promise.resolve({});
 }

@@ -75,11 +75,13 @@ export function composeTemplate(
           '\n',
       );
       const dataPath = join(directory, 'agent/src/scenario.json');
-      const data = JSON.parse(await readFile(dataPath, 'utf8')) as {
-        scenario: string;
-      };
-      data.scenario = scenario;
-      await writeFile(dataPath, JSON.stringify(data, null, 2) + '\n');
+      await writeFile(
+        dataPath,
+        (await readFile(dataPath, 'utf8')).replace(
+          '"scenario": "minimal"',
+          `"scenario": "${scenario}"`,
+        ),
+      );
       const packagePath = join(directory, 'package.json');
       const pkg = JSON.parse(await readFile(packagePath, 'utf8')) as {
         scripts: Record<string, string>;
@@ -102,14 +104,17 @@ export function composeTemplate(
           );
         }
         const workerConfigPath = join(directory, 'tsconfig.worker.json');
-        const workerConfig = JSON.parse(
-          await readFile(workerConfigPath, 'utf8'),
-        ) as { compilerOptions: { types: string[] }; include: string[] };
-        workerConfig.compilerOptions.types.push('node');
-        workerConfig.include.push('server');
         await writeFile(
           workerConfigPath,
-          JSON.stringify(workerConfig, null, 2) + '\n',
+          (await readFile(workerConfigPath, 'utf8'))
+            .replace(
+              '"types": ["./worker-configuration.d.ts"]',
+              '"types": ["./worker-configuration.d.ts", "node"]',
+            )
+            .replace(
+              '"include": ["agent/src/scenario.json", "worker", "worker-configuration.d.ts"]',
+              '"include": [\n    "agent/src/scenario.json",\n    "worker",\n    "worker-configuration.d.ts",\n    "server"\n  ]',
+            ),
         );
         delete pkg.devDependencies['@cloudflare/vite-plugin'];
         delete pkg.devDependencies.wrangler;
@@ -122,10 +127,10 @@ export function composeTemplate(
         const dockerPath = join(directory, 'Dockerfile');
         const install =
           manager === 'pnpm'
-            ? 'npm install --global pnpm@12.3.4 && pnpm install --no-frozen-lockfile'
+            ? 'npm install --global pnpm@12.3.4 && pnpm install --frozen-lockfile'
             : manager === 'bun'
               ? 'npm install --global bun && bun install'
-              : 'npm install';
+              : 'npm ci';
         await writeFile(
           dockerPath,
           (await readFile(dockerPath, 'utf8'))
@@ -175,7 +180,7 @@ export function composeTemplate(
             path,
             contents.replace(
               '{',
-              '{\n  "d1_databases": [{ "binding": "DB", "database_name": "spatius-memory", "database_id": "REPLACE_WITH_D1_ID", "migrations_dir": "migrations" }],',
+              '{\n  "d1_databases": [\n    {\n      "binding": "DB",\n      "database_name": "spatius-memory",\n      "database_id": "REPLACE_WITH_D1_ID",\n      "migrations_dir": "migrations",\n    },\n  ],',
             ),
           );
         }
