@@ -140,7 +140,10 @@ export const agoraTemplate: TemplateDefinition = {
           'import { handleRequest }',
           "import type { AgoraEnvironment } from '../worker/agora.js';\nimport { handleRequest }",
         )
-        .replaceAll('CloudflareBindings', 'AgoraEnvironment'),
+        .replace(
+          'const env = process.env;',
+          'const env = process.env as unknown as AgoraEnvironment;',
+        ),
     );
     const dockerPath = join(directory, 'Dockerfile');
     const install =
