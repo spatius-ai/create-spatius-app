@@ -57,7 +57,7 @@ export interface PackageManagerInventory {
 
 export interface SelectedPackageManagers {
   javascript: SelectedJavaScriptPackageManager;
-  python: SelectedPythonPackageManager;
+  python?: SelectedPythonPackageManager;
 }
 
 export type ProbeCommand = (command: CommandSpec) => Promise<string>;
@@ -428,7 +428,7 @@ export function assertPackageManagersAvailable(
   packageManagers: SelectedPackageManagers,
 ): void {
   const unavailable = [packageManagers.javascript, packageManagers.python].find(
-    (manager) => !manager.available,
+    (manager) => manager !== undefined && !manager.available,
   );
 
   if (unavailable !== undefined) {

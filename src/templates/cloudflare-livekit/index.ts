@@ -33,7 +33,7 @@ export const cloudflareLivekitTemplate: TemplateDefinition = {
   ],
   includeFile(path, configuration) {
     const javascript = configuration?.packageManagers.javascript.name ?? 'pnpm';
-    const python = configuration?.packageManagers.python.name ?? 'uv';
+    const python = configuration?.packageManagers.python?.name ?? 'uv';
     if (path === 'package-lock.json') return javascript === 'npm';
     if (['npmrc', 'pnpm-lock.yaml', 'pnpm-workspace.yaml'].includes(path)) {
       return javascript === 'pnpm';
@@ -59,6 +59,8 @@ export const cloudflareLivekitTemplate: TemplateDefinition = {
     platform,
     pythonPackageManager,
   }) {
+    if (!pythonPackageManager)
+      throw new Error('LiveKit templates require Python tooling.');
     return [
       ...(dependenciesInstalled
         ? []

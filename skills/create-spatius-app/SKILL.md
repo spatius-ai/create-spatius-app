@@ -11,6 +11,8 @@ first, then a compatible scenario. LiveKit stacks use React with Spatius avatars
 Cloudflare or Railway web hosting, and a Python agent on LiveKit Cloud or Railway.
 LiveKit Cloud supplies RTC and inference in every LiveKit stack. Available scenarios
 are minimal, tutoring, live streaming, customer service, and companion.
+The `zeabur-agora` stack supports minimal only and uses Agora hosted Conversational
+AI; it needs JavaScript tooling only. Omit Python flags for this stack.
 
 ## 1. Choose the invocation and destination
 

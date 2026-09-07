@@ -1,6 +1,6 @@
 # create-spatius-app
 
-Create a voice-avatar app with Spatius, React, and LiveKit. Choose Cloudflare or Railway hosting.
+Create a voice-avatar app with Spatius and React. Choose LiveKit with Cloudflare or Railway hosting, or Agora Conversational AI on Zeabur.
 
 > Preview: the CLI is not yet published to npm. The commands below will be
 > available after the first release.
@@ -14,7 +14,7 @@ npx create-spatius-app my-app
 ```
 
 Choose a stack, then a template: minimal, tutoring, live streaming, customer service, or companion. Follow the remaining prompts to choose package managers, install dependencies, and
-configure your LiveKit and Spatius credentials.
+configure your provider and Spatius credentials.
 If LiveKit CLI is missing, setup offers to install it using Homebrew on macOS,
 WinGet on Windows, or LiveKit's Linux installer. You can also enter credentials
 manually or finish setup later.
@@ -27,7 +27,7 @@ pnpm dev
 # Or: npm run dev / bun run dev
 ```
 
-This starts the frontend, API, and Python agent together. Generated DEPLOYMENT.md covers your selected hosting stack.
+This starts the frontend, API, and, for LiveKit stacks, the Python agent together. Generated DEPLOYMENT.md covers your selected hosting stack.
 Open the URL printed in your terminal and start a conversation.
 
 ## Use with a coding agent
@@ -56,7 +56,7 @@ npx create-spatius-app my-tutor --stack railway-livekit --template tutoring
 
 Cloudflare and Railway web hosting can each be paired with LiveKit Cloud Agents
 or a LiveKit agent on Railway. Defaults remain Cloudflare + LiveKit Cloud Agents
-with the minimal template.
+with the minimal template. The `zeabur-agora` stack selects minimal automatically and requires no Python tooling.
 
 ## More options
 

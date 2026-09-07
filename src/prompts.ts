@@ -233,6 +233,9 @@ export class PromptSession implements SetupPrompts {
   }
 
   shouldConfigureCredentials(): Promise<boolean> {
-    return this.confirm('Configure LiveKit and Spatius credentials now?', true);
+    return this.confirm(
+      'Configure provider and Spatius credentials now?',
+      true,
+    );
   }
 }

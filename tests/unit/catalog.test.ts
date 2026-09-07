@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   selectCatalog,
   stacks,
-  scenarios,
+  availableScenarios,
   validateSelection,
 } from '../../src/catalog.js';
 import { getTemplate, resolveProjectTemplate } from '../../src/templates.js';
@@ -77,7 +77,10 @@ describe('stack and scenario catalog', () => {
   });
   it.each(
     Object.keys(stacks).flatMap((stack) =>
-      Object.keys(scenarios).map((scenario) => [stack, scenario]),
+      availableScenarios(stack as keyof typeof stacks).map((scenario) => [
+        stack,
+        scenario,
+      ]),
     ),
   )(
     'generates and recognizes %s / %s with an exact dry run',
@@ -95,8 +98,8 @@ describe('stack and scenario catalog', () => {
         ),
       ).toEqual({ version: 1, stack, template: scenario });
       expect((await resolveProjectTemplate(directory)).id).toBe(template.id);
-      await assertSpatiusProject(directory);
-      const node = stack.startsWith('railway');
+      if (stack !== 'zeabur-agora') await assertSpatiusProject(directory);
+      const node = !stack.startsWith('cloudflare');
       expect(result.files.includes('server/index.ts')).toBe(node);
       expect(result.files.includes('wrangler.jsonc')).toBe(!node);
       if (node && scenario === 'companion') {

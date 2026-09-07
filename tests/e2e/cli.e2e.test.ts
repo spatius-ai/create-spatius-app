@@ -454,6 +454,35 @@ afterEach(async () => {
 });
 
 describe('built CLI', () => {
+  it('generates Agora minimal without a Python toolchain or agent files', async () => {
+    const directory = await createTemporaryDirectory();
+    const { stdout } = await runCli(
+      [
+        'agora-app',
+        '--stack',
+        'zeabur-agora',
+        '--package-manager',
+        'npm',
+        '--no-install',
+        '--no-setup',
+        '--json',
+      ],
+      directory,
+    );
+    const result: unknown = JSON.parse(stdout);
+    expect(result).toMatchObject({
+      ok: true,
+      stack: 'zeabur-agora',
+      template: 'minimal',
+      packageManagers: { javascript: 'npm' },
+    });
+    expect(stdout).not.toContain('"python"');
+    const files = await readdir(join(directory, 'agora-app'));
+    expect(files).toContain('Dockerfile');
+    expect(files).not.toContain('agent');
+    expect(files).not.toContain('wrangler.jsonc');
+  });
+
   it.each(['pnpm', 'npm', 'bun'])(
     'prints a border-free, copyable command block for %s after the outro',
     async (manager) => {
@@ -582,7 +611,7 @@ describe('built CLI', () => {
     expect(help.stdout).toContain('create-spatius-app setup');
     expect(help.stdout).toContain('--interactive');
     expect(help.stdout).toContain('--debug');
-    expect(help.stdout).toContain('local LiveKit and Spatius credentials');
+    expect(help.stdout).toContain('local provider credentials');
   });
 
   it('emits one structured JSON document without decorative output', async () => {
@@ -891,7 +920,7 @@ describe('built CLI', () => {
 
     expect(result.code).toBe(0);
     expect(result.stdout).toContain(
-      'Configure LiveKit and Spatius credentials now?',
+      'Configure provider and Spatius credentials now?',
     );
     await expect(
       readFile(join(root, 'human-app/.dev.vars'), 'utf8'),
@@ -916,7 +945,7 @@ describe('built CLI', () => {
 
     expect(result.code, result.stderr).toBe(0);
     expect(result.stdout).not.toContain(
-      'Configure LiveKit and Spatius credentials now?',
+      'Configure provider and Spatius credentials now?',
     );
     await expect(
       readFile(join(root, 'agent-app/.dev.vars'), 'utf8'),

@@ -34,12 +34,19 @@ export const stacks = {
     agent: 'railway',
     provider: 'livekit',
   },
+  'zeabur-agora': {
+    label: 'Zeabur + Agora Conversational AI',
+    web: 'zeabur',
+    agent: 'agora',
+    provider: 'agora',
+  },
 } as const;
 export type StackId = keyof typeof stacks;
 export const DEFAULT_STACK: StackId = 'cloudflare-livekit';
 export const DEFAULT_SCENARIO: ScenarioId = 'minimal';
 export function availableScenarios(_stack: StackId): ScenarioId[] {
   if (!Object.hasOwn(stacks, _stack)) return [];
+  if (_stack === 'zeabur-agora') return ['minimal'];
   return Object.keys(scenarios) as ScenarioId[];
 }
 export function validateSelection(
@@ -85,7 +92,7 @@ export async function selectCatalog(options: {
           stackOptions,
           DEFAULT_STACK,
         )
-      : stackOptions[0]!.value);
+      : DEFAULT_STACK);
   const choices = availableScenarios(stack);
   const template =
     (options.template as ScenarioId | undefined) ??

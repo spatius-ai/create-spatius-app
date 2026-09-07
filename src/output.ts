@@ -16,7 +16,7 @@ interface ActionsResult {
 
 interface PackageManagersResult {
   javascript: JavaScriptPackageManager;
-  python: PythonPackageManager;
+  python?: PythonPackageManager;
 }
 
 export interface SuccessResult {
@@ -59,7 +59,7 @@ interface CreateSuccessResultOptions {
   javascriptPackageManager: JavaScriptPackageManager;
   platform?: NodeJS.Platform;
   projectDirectory: string;
-  pythonPackageManager: SelectedPythonPackageManager;
+  pythonPackageManager?: SelectedPythonPackageManager;
 }
 
 export function createSuccessResult({
@@ -92,7 +92,7 @@ export function createSuccessResult({
     ok: true,
     packageManagers: {
       javascript: javascriptPackageManager,
-      python: pythonPackageManager.name,
+      ...(pythonPackageManager ? { python: pythonPackageManager.name } : {}),
     },
     projectDirectory,
     schemaVersion: OUTPUT_SCHEMA_VERSION,

@@ -174,7 +174,7 @@ describe('packed CLI', () => {
       { cwd: root },
     );
     expect(JSON.parse(registryResult.stdout)).toEqual({
-      ids: expect.arrayContaining([
+      ids: expect.arrayContaining<string>([
         'cloudflare-livekit/minimal',
         'railway-livekit/companion',
       ]) as unknown,

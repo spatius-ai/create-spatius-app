@@ -128,7 +128,7 @@ describe('dependency installation', () => {
       displayName: 'node success',
     };
     packageManagers.javascript.command = executable;
-    packageManagers.python.command = executable;
+    packageManagers.python!.command = executable;
 
     await expect(
       installProjectDependencies({
@@ -161,7 +161,7 @@ describe('dependency installation', () => {
 
   it('rejects an unusable pip selection before spawning', () => {
     const packageManagers = createPackageManagers('npm', 'pip');
-    delete packageManagers.python.pythonRuntime;
+    delete packageManagers.python!.pythonRuntime;
 
     expect(() =>
       createInstallPlan('/project', packageManagers, 'linux'),

@@ -1,3 +1,4 @@
+import { agoraTemplate } from './agora.js';
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { stacks, type StackId, type ScenarioId } from '../catalog.js';
@@ -9,6 +10,7 @@ export function composeTemplate(
   stack: StackId,
   scenario: ScenarioId,
 ): TemplateDefinition {
+  if (stack === 'zeabur-agora') return agoraTemplate;
   const selected = stacks[stack];
   const node = selected.web === 'railway';
   return {

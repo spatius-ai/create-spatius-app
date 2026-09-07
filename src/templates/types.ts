@@ -18,7 +18,7 @@ export interface TemplateNextStepsOptions {
   dependenciesInstalled: boolean;
   javascriptPackageManager: JavaScriptPackageManager;
   platform: NodeJS.Platform;
-  pythonPackageManager: SelectedPythonPackageManager;
+  pythonPackageManager?: SelectedPythonPackageManager;
 }
 
 export interface TemplateDefinition {
@@ -54,7 +54,7 @@ export interface TemplateDefinition {
   /** Full generated-project checks, run after this template's install plan. */
   readonly verification: readonly {
     javascript: JavaScriptPackageManager;
-    python: PythonPackageManager;
+    python?: PythonPackageManager;
     scripts: readonly string[];
   }[];
 }

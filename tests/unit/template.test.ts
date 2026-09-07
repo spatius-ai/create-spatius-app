@@ -56,7 +56,7 @@ describe('template registry', () => {
   });
 
   it('selects the only registered default without introducing a CLI selector', () => {
-    expect(Object.keys(templateRegistry)).toHaveLength(20);
+    expect(Object.keys(templateRegistry)).toHaveLength(21);
     expect(getTemplate()).toBe(getTemplate(DEFAULT_TEMPLATE_ID));
     expect(getTemplate().id).toBe(DEFAULT_TEMPLATE_ID);
     expect(getTemplate().components).toHaveLength(3);
