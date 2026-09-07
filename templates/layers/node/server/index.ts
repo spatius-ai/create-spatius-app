@@ -52,10 +52,8 @@ async function serve(incoming: IncomingMessage, outgoing: ServerResponse) {
           ? {}
           : { body: Buffer.concat(chunks) }),
       });
-      const response = await handleRequest(
-        request,
-        process.env,
-      );
+      const env = process.env;
+      const response = await handleRequest(request, env);
       outgoing.writeHead(response.status, Object.fromEntries(response.headers));
       outgoing.end(Buffer.from(await response.arrayBuffer()));
       return;
