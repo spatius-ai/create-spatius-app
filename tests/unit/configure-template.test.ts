@@ -124,6 +124,9 @@ describe('generated template configuration', () => {
       for (const text of [readme, instructions]) {
         expect(text).not.toMatch(/__SPATIUS_|\{\{SPATIUS_/u);
         expect(text).toContain(`${javascript} run dev`);
+        expect(text).toContain(`${javascript} run check`);
+        expect(text).toContain(`${javascript} run agent:check`);
+        expect(text).toContain(`${javascript} run test:e2e`);
         expect(text).toContain('npx create-spatius-app setup . --interactive');
       }
       expect(readme).toContain(`${javascript} install`);

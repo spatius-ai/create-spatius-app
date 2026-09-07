@@ -21,6 +21,13 @@ export interface TemplateNextStepsOptions {
   pythonPackageManager: SelectedPythonPackageManager;
 }
 
+export interface HumanStep {
+  command: string;
+  reason: string;
+  requiresHuman: true;
+  requiresTty: true;
+}
+
 export interface TemplateDefinition {
   readonly id: string;
   /** Relative to the installed generator package, never the caller's cwd. */
@@ -38,6 +45,8 @@ export interface TemplateDefinition {
     packageManagers: SelectedPackageManagers,
     platform?: NodeJS.Platform,
   ): InstallStep[];
+  /** Human prerequisites for machine-mode creation; commands run from the project root. */
+  readonly humanSteps: readonly HumanStep[];
   nextSteps(options: TemplateNextStepsOptions): string[];
   readonly setup: {
     recognizes(directory: string): Promise<boolean>;

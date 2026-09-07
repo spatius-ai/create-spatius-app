@@ -1,7 +1,7 @@
 import Ajv2020 from 'ajv/dist/2020.js';
 import { describe, expect, it, vi } from 'vitest';
 
-import resultSchema from '../../schemas/result-v2.schema.json' with { type: 'json' };
+import resultSchema from '../../schemas/result-v3.schema.json' with { type: 'json' };
 import { CliError, EXIT_CODES } from '../../src/errors.js';
 import {
   createFailureResult,
@@ -33,6 +33,7 @@ describe('structured output', () => {
       template: createFixtureTemplate(),
     });
     expect(result.nextSteps).toEqual(['fixture run']);
+    expect(result.humanSteps).toEqual([]);
     expect(result.template).toBe('default');
     expect(validateResult(result)).toBe(true);
   });
@@ -58,7 +59,7 @@ describe('structured output', () => {
       dryRun: false,
       ok: true,
       packageManagers: { javascript: 'pnpm', python: 'uv' },
-      schemaVersion: 2,
+      schemaVersion: 3,
       wouldCreate: [],
     });
   });
@@ -86,6 +87,39 @@ describe('structured output', () => {
     ]);
   });
 
+  it.each([
+    { dryRun: true, dependenciesInstalled: false },
+    { dryRun: false, dependenciesInstalled: false },
+    { dryRun: false, dependenciesInstalled: true },
+  ])(
+    'reports human prerequisites for $dryRun/$dependenciesInstalled',
+    (state) => {
+      const result = createSuccessResult({
+        ...successOptions(state.dryRun, ['README.md']),
+        ...state,
+      });
+      expect(result.humanSteps).toEqual([
+        {
+          command: 'npx create-spatius-app setup . --interactive',
+          requiresHuman: true,
+          requiresTty: true,
+          reason: expect.stringContaining(
+            'Never paste secrets into chat.',
+          ) as unknown,
+        },
+      ]);
+      expect(result.nextSteps).toContain(result.humanSteps[0]!.command);
+      expect(validateResult(result)).toBe(true);
+      expect(
+        validateResult({
+          ...result,
+          humanSteps: [{ ...result.humanSteps[0], requiresHuman: false }],
+        }),
+      ).toBe(false);
+      expect(validateResult({ ...result, humanSteps: undefined })).toBe(false);
+    },
+  );
+
   it('serializes stable error details', () => {
     const result = createFailureResult(
       new CliError('TARGET_NOT_EMPTY', 'Not empty.', {
@@ -103,7 +137,7 @@ describe('structured output', () => {
         recovery: 'Choose an empty directory.',
       },
       ok: false,
-      schemaVersion: 2,
+      schemaVersion: 3,
     });
   });
 

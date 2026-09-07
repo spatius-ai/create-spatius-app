@@ -66,9 +66,14 @@ npx create-spatius-app my-spatius-app --package-manager pnpm --python-package-ma
 ```
 
 Check both the process exit status and the JSON document. Current successful
-results have `schemaVersion: 2`, `ok: true`, `projectDirectory`,
-`packageManagers`, `actions`, and `nextSteps`; dry-run lists `wouldCreate`
-without creating files. Help and version remain plain text, not JSON.
+results have `schemaVersion: 3`, `ok: true`, `projectDirectory`,
+`packageManagers`, `actions`, `humanSteps`, and `nextSteps`; dry-run lists `wouldCreate`
+without creating files. `humanSteps` identifies commands requiring a human and
+secure TTY (`requiresHuman` and `requiresTty`), with a reason for the handoff.
+Commands run from `projectDirectory`; dry-run steps apply after creation.
+Keep these steps pending until a human can complete them. Version 2 results
+lack this metadata; use the generated instructions for the same handoff.
+Help and version remain plain text, not JSON.
 
 On failure, use `error.code` and `error.recovery` rather than parsing decorative
 output. A failed dependency install can leave a valid generated project: inspect
@@ -110,6 +115,9 @@ to try another authentication route automatically.
 Read the generated `AGENTS.md`, README, and package scripts. Use their
 manager-specific installation, frontend/Worker check, Python check, and unified
 development commands; do not maintain a parallel command catalog in this skill.
+Run the documented checks before credential setup when dependencies are
+installed; they use mocks and require no provider credentials. The generated
+README also documents browser checks and their Chromium prerequisite.
 If dependencies were intentionally skipped, report those checks as pending.
 
 Once credentials are ready and starting the app is within the request, run the

@@ -603,10 +603,18 @@ describe('built CLI', () => {
       dryRun: false,
       ok: true,
       packageManagers: { javascript: 'pnpm', python: 'uv' },
-      schemaVersion: 2,
+      schemaVersion: 3,
       template: 'default',
       wouldCreate: [],
     });
+    expect(output.humanSteps).toEqual([
+      {
+        command: 'npx create-spatius-app setup . --interactive',
+        reason: expect.any(String) as unknown,
+        requiresHuman: true,
+        requiresTty: true,
+      },
+    ]);
     expect(output.created).toContain('AGENTS.md');
     expect(output.created).toContain('web/App.tsx');
     expect(output.nextSteps).toContain(
@@ -633,6 +641,9 @@ describe('built CLI', () => {
       dryRun: true,
       ok: true,
     });
+    expect(output.humanSteps).toEqual([
+      expect.objectContaining({ requiresHuman: true, requiresTty: true }),
+    ]);
     expect(output.wouldCreate).toContain('AGENTS.md');
     expect(output.wouldCreate).toContain('agent/src/agent.py');
     await expect(readdir(root)).resolves.toEqual([]);
@@ -713,7 +724,7 @@ describe('built CLI', () => {
         code: 'TARGET_NOT_EMPTY',
       },
       ok: false,
-      schemaVersion: 2,
+      schemaVersion: 3,
     });
     const error = output.error as { path: unknown };
     expect(typeof error.path).toBe('string');
@@ -1355,7 +1366,7 @@ if [ "$1" = "--version" ]; then echo 1.0; exit 0; fi
     expect(JSON.parse(result.stdout)).toMatchObject({
       error: { code: 'INSTALL_FAILED' },
       ok: false,
-      schemaVersion: 2,
+      schemaVersion: 3,
     });
     await expect(
       readFile(join(root, 'failed-install-app/README.md'), 'utf8'),

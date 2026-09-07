@@ -13,6 +13,7 @@ export function createFixtureTemplate(
     mapFile: (path) => path,
     configure: () => Promise.resolve(),
     createInstallPlan: () => [],
+    humanSteps: [],
     nextSteps: () => ['fixture run'],
     setup: {
       recognizes: () => Promise.resolve(false),
