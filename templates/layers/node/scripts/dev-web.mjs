@@ -14,8 +14,8 @@ const result = await runProcess(
   'concurrently',
   [
     '--kill-others',
-    'vite',
-    'tsx watch --env-file-if-exists=.env.local server/index.ts',
+    'node scripts/dev-service.mjs web',
+    'node scripts/dev-service.mjs api',
   ],
   { cwd: process.cwd(), env: process.env },
 );
