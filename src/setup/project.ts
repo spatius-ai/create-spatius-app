@@ -1,3 +1,4 @@
+import { readProjectConfig, webEnvironmentPath } from '../project-config.js';
 import { lstat } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -22,6 +23,17 @@ export async function assertSpatiusProject(
       throw new Error('not a regular directory');
     }
 
+    const config = await readProjectConfig(targetDirectory);
+    const paths = config
+      ? [
+          'package.json',
+          'spatius.config.json',
+          (await webEnvironmentPath(targetDirectory)) + '.example',
+          'worker/index.ts',
+          'agent/src/agent.py',
+          'agent/.env.example',
+        ]
+      : requiredProjectPaths;
     await Promise.all([
       ...requiredProjectDirectories.map(async (relativePath) => {
         const stats = await lstat(join(targetDirectory, relativePath));
@@ -29,7 +41,7 @@ export async function assertSpatiusProject(
           throw new Error(`${relativePath} is not a regular directory`);
         }
       }),
-      ...requiredProjectPaths.map(async (relativePath) => {
+      ...paths.map(async (relativePath) => {
         const stats = await lstat(join(targetDirectory, relativePath));
         if (!stats.isFile() || stats.isSymbolicLink()) {
           throw new Error(`${relativePath} is not a regular file`);

@@ -1,3 +1,4 @@
+import { scenario, scenarioData } from './scenario.js';
 import { useEffect, useRef, useState } from 'react';
 import { SessionAttempt, type PreparedSession } from './session-attempt.js';
 import {
@@ -14,6 +15,9 @@ export default function App() {
   const current = useRef<SessionAttempt | undefined>(undefined);
   const mounted = useRef(false);
   const [phase, setPhase] = useState<Phase>('idle');
+  const [character, setCharacter] = useState(
+    () => sessionStorage.getItem('spatius-character') ?? 'friend',
+  );
   const [detail, setDetail] = useState('');
   const [prepared, setPrepared] = useState<PreparedSession>();
   const [completed, setCompleted] = useState<ConversationEnd>();
@@ -123,6 +127,28 @@ export default function App() {
                   ? 'Your conversation has ended. The full transcript is still here.'
                   : 'Talk to your avatar or send a message. Follow along in the transcript.')}
             </p>
+            {scenario === 'companion' && (
+              <label>
+                Character{' '}
+                <select
+                  value={character}
+                  disabled={phase === 'starting' || phase === 'stopping'}
+                  onChange={(event) => {
+                    setCharacter(event.target.value);
+                    sessionStorage.setItem(
+                      'spatius-character',
+                      event.target.value,
+                    );
+                  }}
+                >
+                  {scenarioData.characters.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
             {phase === 'starting' ? (
               <button
                 key="cancel-start"

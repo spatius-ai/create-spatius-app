@@ -13,6 +13,15 @@ with patch("dotenv.load_dotenv"):
 
 class AgentStartupTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self) -> None:
+        self.enterContext(patch.object(agent_module, "SCENARIO", "minimal"))
+        scenario = SimpleNamespace(
+            load_instructions=AsyncMock(return_value="Test assistant"),
+            attach=AsyncMock(),
+            scripted=set(),
+        )
+        self.enterContext(
+            patch.object(agent_module, "ScenarioSession", return_value=scenario)
+        )
         self.events: list[str] = []
         self.connected = False
         self.room = SimpleNamespace(name="test-room")

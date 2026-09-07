@@ -584,7 +584,7 @@ export async function runCredentialSetup({
   const examples = await readExamples(targetDirectory);
   const rendered = buildCredentialFileContents(state, examples, credentials);
   await writeFiles(targetDirectory, rendered);
-  onStatus('Saved .dev.vars and agent/.env.local for local development only.');
+  onStatus('Saved local web and agent credentials for local development only.');
   return 'configured';
 }
 

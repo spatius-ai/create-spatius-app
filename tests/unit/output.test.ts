@@ -1,7 +1,7 @@
 import Ajv2020 from 'ajv/dist/2020.js';
 import { describe, expect, it, vi } from 'vitest';
 
-import resultSchema from '../../schemas/result-v2.schema.json' with { type: 'json' };
+import resultSchema from '../../schemas/result-v3.schema.json' with { type: 'json' };
 import { CliError, EXIT_CODES } from '../../src/errors.js';
 import {
   createFailureResult,
@@ -33,7 +33,7 @@ describe('structured output', () => {
       template: createFixtureTemplate(),
     });
     expect(result.nextSteps).toEqual(['fixture run']);
-    expect(result.template).toBe('default');
+    expect(result.template).toBe('minimal');
     expect(validateResult(result)).toBe(true);
   });
 
@@ -58,7 +58,7 @@ describe('structured output', () => {
       dryRun: false,
       ok: true,
       packageManagers: { javascript: 'pnpm', python: 'uv' },
-      schemaVersion: 2,
+      schemaVersion: 3,
       wouldCreate: [],
     });
   });
@@ -103,7 +103,7 @@ describe('structured output', () => {
         recovery: 'Choose an empty directory.',
       },
       ok: false,
-      schemaVersion: 2,
+      schemaVersion: 3,
     });
   });
 

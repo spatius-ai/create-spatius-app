@@ -6,7 +6,7 @@ import {
 } from './package-managers.js';
 import { getTemplate, type TemplateDefinition } from './templates.js';
 
-export const OUTPUT_SCHEMA_VERSION = 2 as const;
+export const OUTPUT_SCHEMA_VERSION = 3 as const;
 
 interface ActionsResult {
   dependenciesInstalled: boolean;
@@ -30,7 +30,8 @@ export interface SuccessResult {
   packageManagers: PackageManagersResult;
   projectDirectory: string;
   schemaVersion: typeof OUTPUT_SCHEMA_VERSION;
-  template: 'default';
+  template: string;
+  stack: string;
   wouldCreate: string[];
 }
 
@@ -95,7 +96,8 @@ export function createSuccessResult({
     },
     projectDirectory,
     schemaVersion: OUTPUT_SCHEMA_VERSION,
-    template: 'default',
+    template: template.scenario ?? 'minimal',
+    stack: template.stack ?? 'cloudflare-livekit',
     wouldCreate: dryRun ? [...files] : [],
   };
 }

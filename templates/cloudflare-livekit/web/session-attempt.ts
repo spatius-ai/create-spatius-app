@@ -1,5 +1,9 @@
 import { Room, TokenSource, Track } from 'livekit-client';
-import { requestVoiceSession, type VoiceSession } from './api.js';
+import {
+  requestVoiceSession,
+  stopVoiceSession,
+  type VoiceSession,
+} from './api.js';
 import type { AvatarSessionController } from './avatar-session.js';
 
 export type PreparedSession = {
@@ -30,6 +34,16 @@ export class SessionAttempt {
   stage: 'bootstrap' | 'avatar' = 'bootstrap';
   readonly room: Room;
   readonly abort = new AbortController();
+  private capability?: string;
+  private readonly unload = () => {
+    if (this.capability)
+      navigator.sendBeacon?.(
+        '/api/session/stop',
+        new Blob([JSON.stringify({ capability: this.capability })], {
+          type: 'application/json',
+        }),
+      );
+  };
   private avatar?: AvatarSessionController;
   private disposal?: Promise<void>;
   constructor(private readonly deps: AttemptDependencies = dependencies) {
@@ -41,7 +55,12 @@ export class SessionAttempt {
   ): Promise<PreparedSession> {
     const { signal } = this.abort;
     const credentials = await this.deps.request(signal);
-    signal.throwIfAborted();
+    this.capability = credentials.session_capability;
+    if (signal.aborted) {
+      await stopVoiceSession(this.capability).catch(() => undefined);
+      signal.throwIfAborted();
+    }
+    globalThis.window?.addEventListener('pagehide', this.unload);
     // Warm LiveKit's region selection and connection while the avatar loads.
     // This does not join the room or acquire media; attach must still finish
     // before useSession starts the connection. A failed warmup is non-fatal.
@@ -100,7 +119,9 @@ export class SessionAttempt {
   dispose(): Promise<void> {
     this.abort.abort();
     this.disposal ??= (async () => {
+      globalThis.window?.removeEventListener('pagehide', this.unload);
       await Promise.allSettled([
+        stopVoiceSession(this.capability),
         this.room.disconnect(true),
         this.avatar?.dispose() ?? Promise.resolve(),
       ]);

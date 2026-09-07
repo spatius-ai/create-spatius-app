@@ -29,6 +29,7 @@ interface ScaffoldProjectOptions {
 interface PlannedFile {
   destination: string;
   source: string;
+  directory?: string;
 }
 
 interface ScaffoldPlan {
@@ -141,6 +142,33 @@ export async function createScaffoldPlan({
       template,
       configuration,
     );
+    for (const layer of template.layers ?? []) {
+      const directory = resolveTemplateDirectory({
+        ...template,
+        directory: layer.directory,
+      });
+      const root = await lstat(directory);
+      if (!root.isDirectory() || root.isSymbolicLink())
+        throw new Error('Invalid template layer.');
+      const additions = await listTemplateFiles(
+        directory,
+        template,
+        configuration,
+      );
+      for (const addition of additions) {
+        const index = entries.findIndex(
+          (entry) => entry.destination === addition.destination,
+        );
+        if (index >= 0) {
+          if (!layer.overrides?.includes(addition.destination))
+            throw new Error(
+              `Undeclared template override: ${addition.destination}`,
+            );
+          entries.splice(index, 1);
+        }
+        entries.push({ ...addition, directory });
+      }
+    }
     const destinations = new Set<string>();
     const directories = new Map<string, string>();
     for (const { destination } of entries) {
@@ -259,7 +287,7 @@ export async function scaffoldProject({
     }
 
     for (const entry of plan.entries) {
-      const source = join(templateDirectory, entry.source);
+      const source = join(entry.directory ?? templateDirectory, entry.source);
       const destination = join(targetDirectory, entry.destination);
       const stats = await lstat(source);
       if (!stats.isFile() || stats.isSymbolicLink()) {

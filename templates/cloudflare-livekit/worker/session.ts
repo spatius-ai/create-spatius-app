@@ -1,9 +1,11 @@
 import {
   AccessToken,
+  RoomServiceClient,
   RoomAgentDispatch,
   RoomConfiguration,
 } from 'livekit-server-sdk';
 
+import { signCapability, verifyCapability } from './capability.js';
 import { serializeAgentDispatchMetadata } from './dispatch-metadata.js';
 
 const TOKEN_TTL = '10m';
@@ -17,6 +19,7 @@ const REQUIRED_ENVIRONMENT_KEYS = [
 ] as const;
 
 export interface SessionResponse {
+  session_capability?: string;
   participant_token: string;
   room_name: string;
   server_url: string;
@@ -56,6 +59,7 @@ function requireConfiguration(env: CloudflareBindings): void {
 export async function createSession(
   env: CloudflareBindings,
   randomUUID: () => string = () => crypto.randomUUID(),
+  scenarioMetadata?: Record<string, unknown>,
 ): Promise<SessionResponse> {
   requireConfiguration(env);
 
@@ -85,12 +89,19 @@ export async function createSession(
         metadata: serializeAgentDispatchMetadata(
           avatarId,
           env.CARTESIA_VOICE_ID,
+          scenarioMetadata
+            ? { ...scenarioMetadata, participant: participantIdentity }
+            : { participant: participantIdentity },
         ),
       }),
     ],
   });
 
   return {
+    session_capability: await signCapability(env.LIVEKIT_API_SECRET, {
+      purpose: 'session',
+      room: roomName,
+    }),
     participant_token: await accessToken.toJwt(),
     room_name: roomName,
     server_url: env.LIVEKIT_URL,
@@ -100,4 +111,31 @@ export async function createSession(
       ? { spatius_avatar_background_url: env.SPATIUS_AVATAR_BACKGROUND_URL }
       : {}),
   };
+}
+
+export async function stopSession(
+  env: CloudflareBindings,
+  token: string,
+): Promise<void> {
+  const claims = await verifyCapability(
+    env.LIVEKIT_API_SECRET,
+    token,
+    'session',
+  );
+  if (typeof claims.room !== 'string') throw new Error('Invalid room');
+  const rooms = new RoomServiceClient(
+    env.LIVEKIT_URL.replace(/^wss:/, 'https:'),
+    env.LIVEKIT_API_KEY,
+    env.LIVEKIT_API_SECRET,
+  );
+  try {
+    await rooms.deleteRoom(claims.room);
+  } catch (error) {
+    if (!(
+      error instanceof Error &&
+      'code' in error &&
+      error.code === 'not_found'
+    ))
+      throw error;
+  }
 }

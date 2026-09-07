@@ -1,4 +1,5 @@
 export interface VoiceSession {
+  session_capability?: string;
   participant_token: string;
   room_name: string;
   server_url: string;
@@ -25,12 +26,18 @@ function isVoiceSession(value: unknown): value is VoiceSession {
 export async function requestVoiceSession(
   signal?: AbortSignal,
 ): Promise<VoiceSession> {
-  const response = await fetch('/api/session', {
-    signal,
-    cache: 'no-store',
-    headers: { accept: 'application/json' },
-    method: 'POST',
-  });
+  const character = globalThis.sessionStorage?.getItem('spatius-character');
+  const response = await fetch(
+    character
+      ? `/api/session?character=${encodeURIComponent(character)}`
+      : '/api/session',
+    {
+      signal,
+      cache: 'no-store',
+      headers: { accept: 'application/json' },
+      method: 'POST',
+    },
+  );
   const payload: unknown = await response.json().catch(() => undefined);
 
   if (!response.ok) {
@@ -66,4 +73,15 @@ export async function requestVoiceSession(
     }
   }
   return payload;
+}
+
+export async function stopVoiceSession(capability?: string): Promise<void> {
+  if (!capability) return;
+  const response = await fetch('/api/session/stop', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ capability }),
+    keepalive: true,
+  });
+  if (!response.ok) throw new Error('Session cleanup failed');
 }

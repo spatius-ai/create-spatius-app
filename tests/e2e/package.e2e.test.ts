@@ -155,7 +155,7 @@ describe('packed CLI', () => {
       template: string;
       nextSteps: string[];
     };
-    expect(result).toMatchObject({ ok: true, template: 'default' });
+    expect(result).toMatchObject({ ok: true, template: 'minimal' });
     expect(result.nextSteps).toContain('npm run dev');
     const packageRoot = join(installation, 'node_modules/create-spatius-app');
     const registryResult = await execFileAsync(
@@ -174,8 +174,11 @@ describe('packed CLI', () => {
       { cwd: root },
     );
     expect(JSON.parse(registryResult.stdout)).toEqual({
-      ids: ['cloudflare-livekit'],
-      selected: 'cloudflare-livekit',
+      ids: expect.arrayContaining([
+        'cloudflare-livekit/minimal',
+        'railway-livekit/companion',
+      ]),
+      selected: 'cloudflare-livekit/minimal',
       directory: await realpath(
         join(packageRoot, 'templates/cloudflare-livekit'),
       ),

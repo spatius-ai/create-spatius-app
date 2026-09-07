@@ -87,3 +87,17 @@ execution, and never add implicit deployment or overwrite a non-empty target.
 CLI-interface changes require built-command end-to-end coverage. Package-layout
 changes require packed-artifact coverage. Do not commit `dist/`, coverage,
 dependency stores, npm tarballs, or browser test output.
+
+## Stack and template composition
+
+`src/catalog.ts` defines the stack-first CLI choices and compatible scenarios.
+`src/templates/composed.ts` assembles bundled layers over the LiveKit foundation.
+Each layer must explicitly declare the generated paths it replaces. The planner
+rejects undeclared collisions, unsafe paths, and symlinks before copying files.
+Generated `spatius.config.json` selects setup behavior; projects without it retain
+legacy Cloudflare detection.
+
+Add catalog matrix coverage when adding a stack or scenario. JSON consumers use
+`schemas/result-v3.schema.json`; older schemas remain published for reference.
+Generated deployment and customization instructions belong in the generated
+project, not the repository README.

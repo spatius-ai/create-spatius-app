@@ -66,7 +66,7 @@ npx create-spatius-app my-spatius-app --package-manager pnpm --python-package-ma
 ```
 
 Check both the process exit status and the JSON document. Current successful
-results have `schemaVersion: 2`, `ok: true`, `projectDirectory`,
+results have `schemaVersion: 3`, `ok: true`, `projectDirectory`,
 `packageManagers`, `actions`, and `nextSteps`; dry-run lists `wouldCreate`
 without creating files. Help and version remain plain text, not JSON.
 
@@ -130,3 +130,7 @@ and **running**; a successful generator exit does not prove live provider health
 Hand ongoing customization to the project's `AGENTS.md`. Deployment, installing
 other skills, publishing, and changing unrelated agent configuration are not
 part of this workflow.
+
+## Stack and template selection
+
+Use `--stack` and `--template` for deterministic generation. Stack selection precedes template selection, and singleton choices are automatic. Use `--help` for available values. JSON schema version 3 reports both values. Defaults are `cloudflare-livekit` and `minimal`.

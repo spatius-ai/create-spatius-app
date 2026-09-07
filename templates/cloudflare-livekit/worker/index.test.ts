@@ -30,7 +30,7 @@ describe('createSession', () => {
       ) as {
         roomConfig: { agents: Array<{ metadata: string }> };
       };
-      expect(JSON.parse(payload.roomConfig.agents[0].metadata)).toEqual({
+      expect(JSON.parse(payload.roomConfig.agents[0].metadata)).toMatchObject({
         version: 1,
         avatar: { id: TEST_ENV.SPATIUS_AVATAR_ID },
         voice: { id: voiceId },
@@ -83,6 +83,7 @@ describe('createSession', () => {
         agentName: 'spatius-agent',
         metadata: JSON.stringify({
           avatar: { id: TEST_ENV.SPATIUS_AVATAR_ID },
+          context: { participant: 'web-participant-id' },
           version: 1,
         }),
       }),
@@ -145,7 +146,7 @@ describe('Worker routes', () => {
     expect(response.status).toBe(503);
     await expect(response.json()).resolves.toEqual({
       error:
-        'The voice session service is not configured. Check the Worker environment.',
+        'The voice session service is not configured. Check the server environment.',
     });
     consoleError.mockRestore();
   });

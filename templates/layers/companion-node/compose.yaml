@@ -1,0 +1,11 @@
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: spatius
+      POSTGRES_PASSWORD: spatius
+      POSTGRES_DB: spatius
+    ports: ['127.0.0.1:5432:5432']
+    volumes: ['memory:/var/lib/postgresql/data']
+volumes:
+  memory:
