@@ -152,7 +152,7 @@ export function composeTemplate(
         '\nDeploy the agent before opening conversations. Use separate LiveKit projects for development and production. Local setup never uploads secrets.\n';
       if (scenario === 'companion') {
         deployment +=
-          '\n## Companion memory\nSet SPATIUS_API_ORIGIN in the agent service to your public web origin (http://localhost:5173 locally). The agent reaches memory over authenticated HTTP.\n';
+          '\n## Companion memory\n\nSet SPATIUS_API_ORIGIN in the agent service to your public web origin (http://localhost:5173 locally). The agent reaches memory over authenticated HTTP.\n';
         if (node) {
           const serverPath = join(directory, 'server/index.ts');
           await writeFile(
