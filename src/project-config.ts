@@ -39,5 +39,7 @@ export async function readProjectConfig(
 }
 export async function webEnvironmentPath(directory: string): Promise<string> {
   const config = await readProjectConfig(directory);
-  return config?.stack.startsWith('railway') ? '.env.local' : '.dev.vars';
+  return config && !config.stack.startsWith('cloudflare')
+    ? '.env.local'
+    : '.dev.vars';
 }

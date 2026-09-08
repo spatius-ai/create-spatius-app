@@ -58,7 +58,9 @@ async function verify(template, variant) {
       variant.javascript,
       undefined,
     ),
-    python: selectPythonPackageManager(inventory, variant.python),
+    ...(variant.python
+      ? { python: selectPythonPackageManager(inventory, variant.python) }
+      : {}),
   };
   await scaffoldProject({
     configuration: { packageManagers },

@@ -54,6 +54,7 @@ function createReplacements(
 ): ReadonlyMap<string, string> {
   const javascript = packageManagers.javascript;
   const python = packageManagers.python;
+  if (!python) throw new Error('LiveKit templates require Python tooling.');
 
   return new Map([
     [

@@ -103,3 +103,9 @@ Add catalog matrix coverage when adding a stack or scenario. JSON consumers use
 `schemas/result-v3.schema.json`; older schemas remain published for reference.
 Generated deployment and customization instructions belong in the generated
 project, not the repository README.
+
+The `zeabur-agora/minimal` adapter reuses the shared presentation and Node server,
+but owns its hosted-agent API, browser session lifecycle, and local credential setup.
+Its verification variants omit Python; the CLI must not probe or prompt for Python
+tooling for that stack. Live media and cloud deployment smoke tests require real
+provider credentials and are separate from local generated-project checks.

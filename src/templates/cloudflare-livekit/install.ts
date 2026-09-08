@@ -42,6 +42,7 @@ export function createInstallPlan(
     ),
   ];
 
+  if (!python) return steps;
   if (python.name === 'uv') {
     steps.push(
       commandStep(

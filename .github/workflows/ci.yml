@@ -73,6 +73,7 @@ jobs:
       fail-fast: false
       matrix:
         template:
+          - zeabur-agora/minimal
           - cloudflare-livekit/minimal
           - cloudflare-livekit/tutoring
           - cloudflare-livekit/live-streaming

@@ -199,6 +199,7 @@ async function resolvePackageManagers(
   options: CliOptions,
   interactive: boolean,
   prompts: PromptSession,
+  requiresPython = true,
 ): Promise<SelectedPackageManagers> {
   if (!interactive && (options.install !== true || options.dryRun)) {
     const inventory = { javascript: [], python: [] };
@@ -213,10 +214,14 @@ async function resolvePackageManagers(
         javascriptDefault,
         process.env.npm_config_user_agent,
       ),
-      python: selectPythonPackageManager(
-        inventory,
-        options.pythonPackageManager ?? 'uv',
-      ),
+      ...(requiresPython
+        ? {
+            python: selectPythonPackageManager(
+              inventory,
+              options.pythonPackageManager ?? 'uv',
+            ),
+          }
+        : {}),
     };
   }
 
@@ -224,9 +229,11 @@ async function resolvePackageManagers(
     ...(options.packageManager === undefined
       ? {}
       : { javascript: [options.packageManager] }),
-    ...(options.pythonPackageManager === undefined
-      ? {}
-      : { python: [options.pythonPackageManager] }),
+    ...(!requiresPython
+      ? { python: [] }
+      : options.pythonPackageManager === undefined
+        ? {}
+        : { python: [options.pythonPackageManager] }),
   });
   const javascriptDefault =
     !interactive &&
@@ -245,7 +252,9 @@ async function resolvePackageManagers(
     javascriptDefault,
     process.env.npm_config_user_agent,
   );
-  let python = selectPythonPackageManager(inventory, pythonDefault);
+  let python = requiresPython
+    ? selectPythonPackageManager(inventory, pythonDefault)
+    : undefined;
 
   if (interactive && options.packageManager === undefined) {
     const selectedName = await prompts.choose(
@@ -258,7 +267,7 @@ async function resolvePackageManagers(
     )!;
   }
 
-  if (interactive && options.pythonPackageManager === undefined) {
+  if (interactive && python && options.pythonPackageManager === undefined) {
     const selectedName = await prompts.choose(
       'Which Python package manager?',
       managerOptions(inventory.python),
@@ -272,9 +281,9 @@ async function resolvePackageManagers(
 
 function renderManagerSummary(
   javascript: SelectedJavaScriptPackageManager,
-  python: SelectedPythonPackageManager,
+  python: SelectedPythonPackageManager | undefined,
 ): string {
-  return `${javascript.name} + ${python.name}`;
+  return python ? `${javascript.name} + ${python.name}` : javascript.name;
 }
 
 function isTestTerminalOverride(): boolean {
@@ -370,6 +379,12 @@ async function runCreateCommand(
 
     const selection = await selectCatalog({ ...options, interactive, prompts });
     const template = getTemplate(`${selection.stack}/${selection.template}`);
+    if (template.requiresPython === false && options.pythonPackageManager)
+      throw new CliError(
+        'INVALID_ARGUMENT',
+        'This stack does not use Python. Remove --python-package-manager.',
+        { exitCode: EXIT_CODES.invalidArgument },
+      );
     const projectDirectoryInput = await resolveProjectDirectoryInput({
       argument: projectDirectoryArgument,
       interactive,
@@ -380,6 +395,7 @@ async function runCreateCommand(
       options,
       interactive,
       prompts,
+      template.requiresPython !== false,
     );
     const shouldInstall =
       !options.dryRun &&
@@ -630,7 +646,7 @@ function addCreateOptions(command: Command): Command {
     )
     .option('--install', 'install JavaScript and Python dependencies')
     .option('--no-install', 'skip dependency installation')
-    .option('--setup', 'configure local LiveKit and Spatius credentials')
+    .option('--setup', 'configure local provider and Spatius credentials')
     .option('--no-setup', 'skip credential setup')
     .option('--debug', 'write safe Spatius request diagnostics to stderr')
     .option('--json', 'emit one machine-readable JSON result')
@@ -675,7 +691,7 @@ Examples:
   program
     .command('setup')
     .description(
-      'securely configure local LiveKit and Spatius credentials for an existing generated project',
+      'securely configure local provider credentials for an existing generated project',
     )
     .argument('[project-directory]', 'generated project to configure', '.')
     .addOption(new Option('--interactive', 'allow browser and secret prompts'))

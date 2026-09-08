@@ -1,5 +1,5 @@
 import { readProjectConfig } from './project-config.js';
-import { stacks, scenarios, type StackId, type ScenarioId } from './catalog.js';
+import { stacks, availableScenarios, type StackId } from './catalog.js';
 import { composeTemplate } from './templates/composed.js';
 import { fileURLToPath } from 'node:url';
 
@@ -17,7 +17,7 @@ export const DEFAULT_TEMPLATE_ID = 'cloudflare-livekit' as const;
 export const templateRegistry: Record<string, TemplateDefinition> =
   Object.fromEntries(
     (Object.keys(stacks) as StackId[]).flatMap((stack) =>
-      (Object.keys(scenarios) as ScenarioId[]).map((scenario) => {
+      availableScenarios(stack).map((scenario) => {
         const template = composeTemplate(stack, scenario);
         return [template.id, template];
       }),
