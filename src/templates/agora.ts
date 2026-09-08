@@ -55,6 +55,15 @@ export const agoraTemplate: TemplateDefinition = {
   stack: 'zeabur-agora',
   scenario: 'minimal',
   requiresPython: false,
+  humanSteps: [
+    {
+      command: 'npx create-spatius-app setup . --interactive',
+      reason:
+        'Enter Agora and Spatius credentials in a secure interactive terminal and configure a published English Agora pipeline. Never paste secrets into chat.',
+      requiresHuman: true,
+      requiresTty: true,
+    },
+  ],
   directory: 'templates/cloudflare-livekit',
   description: 'Zeabur + Agora Conversational AI — minimal',
   components: [

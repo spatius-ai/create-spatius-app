@@ -474,6 +474,7 @@ describe('built CLI', () => {
       ok: true,
       stack: 'zeabur-agora',
       template: 'minimal',
+      humanSteps: [{ requiresHuman: true, requiresTty: true }],
       packageManagers: { javascript: 'npm' },
     });
     expect(stdout).not.toContain('"python"');

@@ -79,9 +79,11 @@ describe('Agora-only setup', () => {
     const contents = await readFile(join(directory, '.env.local'), 'utf8');
     expect(contents).toContain('EXTRA=value');
     expect(contents).toContain('AGORA_PIPELINE_ID="pipeline"');
-    expect((await stat(join(directory, '.env.local'))).mode & 0o777).toBe(
-      0o600,
-    );
+    // Windows exposes DOS attributes through stat.mode, not POSIX permissions.
+    if (process.platform !== 'win32')
+      expect((await stat(join(directory, '.env.local'))).mode & 0o777).toBe(
+        0o600,
+      );
     expect(prompts.password).toHaveBeenCalledWith('AGORA_APP_CERTIFICATE');
     expect(prompts.password).toHaveBeenCalledWith('SPATIUS_API_KEY');
   });
