@@ -14,7 +14,7 @@ const require = __createRequire(import.meta.url);`,
   noExternal: ['@clack/prompts', '@vercel/detect-agent', 'commander', 'yaml'],
   outDir: 'dist',
   platform: 'node',
-  sourcemap: true,
+  sourcemap: false,
   splitting: false,
   target: 'node22',
 });
