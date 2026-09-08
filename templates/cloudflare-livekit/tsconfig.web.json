@@ -22,12 +22,6 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": [
-    "agent/src/scenario.json",
-    "web",
-    "tests/web",
-    "tests/e2e/**/*.ts",
-    "tests/e2e/**/*.tsx"
-  ],
+  "include": ["web", "tests/web", "tests/e2e/**/*.ts", "tests/e2e/**/*.tsx"],
   "exclude": ["tests/e2e/vite.config.ts"]
 }

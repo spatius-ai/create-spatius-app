@@ -71,11 +71,10 @@ To add a future internal entry:
    from a directory outside the repository.
 
 The `pnpm template:test:e2e` command builds the CLI and runs Chromium
-tests after the pnpm/uv JavaScript checks for minimal LiveKit entries.
-Scenario controls have separate generated unit tests. CI runs each stack/scenario
-as a separate job to keep the expanded catalog within its time budget.
+tests after the pnpm/uv JavaScript checks for LiveKit stacks.
+CI runs each of the five stacks as a separate job.
 To verify one entry locally, run `pnpm build` followed by
-`node scripts/check-template.mjs --template railway-livekit/companion`. It installs Chromium
+`node scripts/check-template.mjs --stack railway-livekit`. It installs Chromium
 (including system dependencies on Linux), retains output under
 `test-results/<id>/`, and continues the normal full verification. Use it when
 the generated template includes Playwright configuration and `test:e2e`.
@@ -92,19 +91,20 @@ dependency stores, npm tarballs, or browser test output.
 
 ## Stack and template composition
 
-`src/catalog.ts` defines the stack-first CLI choices and compatible scenarios.
+`src/catalog.ts` defines the tech stack choices.
 `src/templates/composed.ts` assembles bundled layers over the LiveKit foundation.
 Each layer must explicitly declare the generated paths it replaces. The planner
 rejects undeclared collisions, unsafe paths, and symlinks before copying files.
-Generated `spatius.config.json` selects setup behavior; projects without it retain
-legacy Cloudflare detection.
+Generated `spatius.config.json` uses version 2 with a `stack` field to select setup
+behavior. Version 1 scenario configuration is unsupported and is never migrated;
+projects without a config retain legacy Cloudflare detection.
 
-Add catalog matrix coverage when adding a stack or scenario. JSON consumers use
-`schemas/result-v3.schema.json`; older schemas remain published for reference.
+Add catalog matrix coverage when adding a stack. JSON consumers use
+`schemas/result-v4.schema.json`; older schemas remain published for reference.
 Generated deployment and customization instructions belong in the generated
 project, not the repository README.
 
-The `zeabur-agora/minimal` adapter reuses the shared presentation and Node server,
+The `zeabur-agora` adapter reuses the shared presentation and Node server,
 but owns its hosted-agent API, browser session lifecycle, and local credential setup.
 Its verification variants omit Python; the CLI must not probe or prompt for Python
 tooling for that stack. Live media and cloud deployment smoke tests require real

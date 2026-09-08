@@ -153,24 +153,24 @@ describe('packed CLI', () => {
     );
     const result = JSON.parse(generated.stdout) as {
       ok: boolean;
-      template: string;
+      stack: string;
       nextSteps: string[];
     };
     expect(result).toMatchObject({
       ok: true,
-      template: 'minimal',
-      schemaVersion: 3,
+      stack: 'cloudflare-livekit',
+      schemaVersion: 4,
       humanSteps: [{ requiresHuman: true, requiresTty: true }],
     });
     expect(result.nextSteps).toContain('npm run dev');
     const packageRoot = join(installation, 'node_modules/create-spatius-app');
     const schema = JSON.parse(
       await readFile(
-        join(packageRoot, 'schemas/result-v3.schema.json'),
+        join(packageRoot, 'schemas/result-v4.schema.json'),
         'utf8',
       ),
     ) as { title: string };
-    expect(schema.title).toBe('create-spatius-app result v3');
+    expect(schema.title).toBe('create-spatius-app result v4');
     const registryResult = await execFileAsync(
       process.execPath,
       [
@@ -187,11 +187,14 @@ describe('packed CLI', () => {
       { cwd: root },
     );
     expect(JSON.parse(registryResult.stdout)).toEqual({
-      ids: expect.arrayContaining<string>([
-        'cloudflare-livekit/minimal',
-        'railway-livekit/companion',
-      ]) as unknown,
-      selected: 'cloudflare-livekit/minimal',
+      ids: [
+        'cloudflare-livekit',
+        'cloudflare-livekit-railway',
+        'railway-livekit-cloud',
+        'railway-livekit',
+        'zeabur-agora',
+      ],
+      selected: 'cloudflare-livekit',
       directory: await realpath(
         join(packageRoot, 'templates/cloudflare-livekit'),
       ),

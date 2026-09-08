@@ -7,11 +7,10 @@ license: MIT
 # Bootstrap a Spatius application
 
 Use the generator rather than assembling the template yourself. Choose a stack
-first, then a compatible scenario. LiveKit stacks use React with Spatius avatars,
+only. LiveKit stacks use React with Spatius avatars,
 Cloudflare or Railway web hosting, and a Python agent on LiveKit Cloud or Railway.
-LiveKit Cloud supplies RTC and inference in every LiveKit stack. Available scenarios
-are minimal, tutoring, live streaming, customer service, and companion.
-The `zeabur-agora` stack supports minimal only and uses Agora hosted Conversational
+LiveKit Cloud supplies RTC and inference in every LiveKit stack.
+The `zeabur-agora` stack uses Agora hosted Conversational
 AI; it needs JavaScript tooling only. Omit Python flags for this stack.
 
 ## 1. Choose the invocation and destination
@@ -68,7 +67,7 @@ npx create-spatius-app my-spatius-app --package-manager pnpm --python-package-ma
 ```
 
 Check both the process exit status and the JSON document. Current successful
-results have `schemaVersion: 3`, `ok: true`, `projectDirectory`,
+results have `schemaVersion: 4`, `ok: true`, `projectDirectory`,
 `packageManagers`, `actions`, `humanSteps`, and `nextSteps`; dry-run lists `wouldCreate`
 without creating files. `humanSteps` identifies commands requiring a human and
 secure TTY (`requiresHuman` and `requiresTty`), with a reason for the handoff.
@@ -142,6 +141,6 @@ Hand ongoing customization to the project's `AGENTS.md`. Deployment, installing
 other skills, publishing, and changing unrelated agent configuration are not
 part of this workflow.
 
-## Stack and template selection
+## Stack selection
 
-Use `--stack` and `--template` for deterministic generation. Stack selection precedes template selection, and singleton choices are automatic. Use `--help` for available values. JSON schema version 3 reports both values. Defaults are `cloudflare-livekit` and `minimal`.
+Use `--stack` for deterministic generation. Use `--help` for available stacks. JSON schema version 4 reports `stack`. The default is `cloudflare-livekit`.

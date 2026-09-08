@@ -31,7 +31,6 @@ export interface HumanStep {
 export interface TemplateDefinition {
   readonly id: string;
   readonly stack?: string;
-  readonly scenario?: string;
   readonly requiresPython?: boolean;
   /** Ordered bundled layers. Overrides must name exact generated paths. */
   readonly layers?: readonly {

@@ -336,6 +336,7 @@ describe('scaffoldProject', () => {
       createScaffoldPlan({
         targetDirectory: join(root, 'empty-result'),
         templateDirectory: emptyTemplate,
+        template: createFixtureTemplate({ layers: [] }),
       }),
     ).rejects.toThrow('template is empty');
   });

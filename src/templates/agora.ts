@@ -51,9 +51,8 @@ const files = new Set([
   'web/components/agents-ui/PROVENANCE.md',
 ]);
 export const agoraTemplate: TemplateDefinition = {
-  id: 'zeabur-agora/minimal',
+  id: 'zeabur-agora',
   stack: 'zeabur-agora',
-  scenario: 'minimal',
   requiresPython: false,
   humanSteps: [
     {
@@ -65,7 +64,7 @@ export const agoraTemplate: TemplateDefinition = {
     },
   ],
   directory: 'templates/cloudflare-livekit',
-  description: 'Zeabur + Agora Conversational AI — minimal',
+  description: 'Zeabur + Agora Conversational AI',
   components: [
     '- web/       React + Spatius AvatarKit + Agora',
     '- server/    Node HTTP API; Agora hosts the conversational agent',
@@ -135,11 +134,7 @@ export const agoraTemplate: TemplateDefinition = {
     }
     await writeFile(
       join(directory, 'spatius.config.json'),
-      JSON.stringify(
-        { version: 1, stack: 'zeabur-agora', template: 'minimal' },
-        null,
-        2,
-      ) + '\n',
+      JSON.stringify({ version: 2, stack: 'zeabur-agora' }, null, 2) + '\n',
     );
     const serverPath = join(directory, 'server/index.ts');
     await writeFile(

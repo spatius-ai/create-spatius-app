@@ -28,9 +28,8 @@ async function project() {
     writeFile(
       join(directory, 'spatius.config.json'),
       JSON.stringify({
-        version: 1,
+        version: 2,
         stack: 'zeabur-agora',
-        template: 'minimal',
       }),
     ),
     ...['package.json', '.env.local.example', 'worker/agora.ts'].map((file) =>
@@ -56,7 +55,7 @@ const prompts = {
   password: vi.fn(async (key: string) => values[key]!),
 };
 describe('Agora-only setup', () => {
-  it('skips the only template and rejects unsupported scenarios', async () => {
+  it('uses the selected stack without prompting and rejects unknown stacks', async () => {
     const choose = vi.fn();
     expect(
       await selectCatalog({
@@ -64,11 +63,9 @@ describe('Agora-only setup', () => {
         interactive: true,
         prompts: { choose },
       }),
-    ).toEqual({ stack: 'zeabur-agora', template: 'minimal' });
+    ).toEqual({ stack: 'zeabur-agora' });
     expect(choose).not.toHaveBeenCalled();
-    expect(() => validateSelection('zeabur-agora', 'companion')).toThrow(
-      'Unsupported',
-    );
+    expect(() => validateSelection('invalid')).toThrow('Unsupported');
   });
   it('writes one private environment file, preserving unrelated variables', async () => {
     const directory = await project();

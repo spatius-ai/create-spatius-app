@@ -16,13 +16,13 @@ import {
 const execFileAsync = promisify(execFile);
 const repositoryRoot = fileURLToPath(new URL('../', import.meta.url));
 const { values } = parseArgs({
-  options: { browser: { type: 'boolean' }, template: { type: 'string' } },
+  options: { browser: { type: 'boolean' }, stack: { type: 'string' } },
 });
 const browser = values.browser ?? false;
-if (values.template && !Object.hasOwn(templateRegistry, values.template))
-  throw new Error('Unknown template: ' + values.template);
-const selectedTemplates = values.template
-  ? [templateRegistry[values.template]]
+if (values.stack && !Object.hasOwn(templateRegistry, values.stack))
+  throw new Error('Unknown stack: ' + values.stack);
+const selectedTemplates = values.stack
+  ? [templateRegistry[values.stack]]
   : Object.values(templateRegistry);
 const temporaryRoot = await mkdtemp(join(tmpdir(), 'create-spatius-template-'));
 
@@ -79,7 +79,6 @@ async function verify(template, variant) {
     await run(variant.javascript, ['run', script], generatedProject);
     if (
       browser &&
-      template.scenario === 'minimal' &&
       variant.javascript === 'pnpm' &&
       variant.python === 'uv' &&
       script === 'check'
