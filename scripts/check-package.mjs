@@ -97,6 +97,7 @@ try {
   const forbiddenPrefixes = ['scripts/', 'src/', 'tests/', 'template/'];
   const forbiddenFile = files.find(
     (file) =>
+      file.endsWith('.map') ||
       forbiddenPrefixes.some((prefix) => file.startsWith(prefix)) ||
       /(?:^|\/)(?:\.wrangler|\.venv|\.pytest_cache|\.ruff_cache|__pycache__|coverage|node_modules|test-results|playwright-report)(?:\/|$)/u.test(
         file,
