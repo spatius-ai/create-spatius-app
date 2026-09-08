@@ -60,7 +60,7 @@
     "@eslint/js": "^10.0.1",
     "@types/node": "^26.4.1",
     "@vercel/detect-agent": "1.2.5",
-    "@vitest/coverage-v8": "4.1.11",
+    "@vitest/coverage-v8": "5.0.0",
     "ajv": "8.20.0",
     "commander": "^15.0.0",
     "concurrently": "10.0.5",
@@ -73,7 +73,7 @@
     "tsx": "^4.23.13",
     "typescript": "^6.0.2",
     "typescript-eslint": "^8.69.0",
-    "vitest": "^4.1.11",
+    "vitest": "^5.0.0",
     "yaml": "2.9.0"
   }
 }

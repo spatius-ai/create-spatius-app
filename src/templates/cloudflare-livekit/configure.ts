@@ -86,6 +86,10 @@ function createReplacements(
       javascriptRunCommand(javascript.name, 'check'),
     ],
     [
+      '__SPATIUS_E2E_COMMAND__',
+      javascriptRunCommand(javascript.name, 'test:e2e'),
+    ],
+    [
       '__SPATIUS_AGENT_CHECK_COMMAND__',
       javascriptRunCommand(javascript.name, 'agent:check'),
     ],

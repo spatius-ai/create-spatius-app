@@ -26,7 +26,8 @@
         "actions",
         "packageManagers",
         "nextSteps",
-        "stack"
+        "stack",
+        "humanSteps"
       ],
       "properties": {
         "schemaVersion": {
@@ -99,6 +100,29 @@
         },
         "stack": {
           "type": "string"
+        },
+        "humanSteps": {
+          "type": "array",
+          "description": "Human prerequisites before running the app. Commands run from projectDirectory. On dry runs these are planned steps after creation, not actions already performed.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["command", "reason", "requiresHuman", "requiresTty"],
+            "properties": {
+              "command": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              },
+              "requiresHuman": {
+                "const": true
+              },
+              "requiresTty": {
+                "const": true
+              }
+            }
+          }
         }
       }
     },

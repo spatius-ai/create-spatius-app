@@ -14,8 +14,9 @@ are minimal, tutoring, live streaming, customer service, and companion.
 
 ## 1. Choose the invocation and destination
 
-- Require Node.js 22 or newer. Check available tools with bounded version
-  probes; do not install system tools or provider CLIs implicitly.
+- The CLI requires Node.js 22+; running the generated app requires Node.js
+  22.12+ and Python 3.11–3.14. Check available tools with bounded version probes;
+  do not install system tools or provider CLIs implicitly.
 - Use the published npm CLI. Check its version and help before creating:
 
   ```sh
@@ -23,10 +24,9 @@ are minimal, tutoring, live streaming, customer service, and companion.
   npx create-spatius-app --help
   ```
 
-  **Release prerequisite:** this CLI was unpublished when this skill was added.
-  If npm cannot resolve it, report whether publication, network access, or
-  authentication is blocking setup. Do not clone or build the generator as a
-  fallback. Reuse the same CLI version for this entire setup.
+  If npm cannot resolve it, report the registry, network, or authentication
+  error that blocks setup. Do not clone or build the generator as a fallback.
+  Reuse the same CLI version for this entire setup.
 
 - Respect the requested destination. If unspecified, propose `my-spatius-app`
   in the intended parent directory. Use `.` only when that directory is empty;
@@ -67,8 +67,13 @@ npx create-spatius-app my-spatius-app --package-manager pnpm --python-package-ma
 
 Check both the process exit status and the JSON document. Current successful
 results have `schemaVersion: 3`, `ok: true`, `projectDirectory`,
-`packageManagers`, `actions`, and `nextSteps`; dry-run lists `wouldCreate`
-without creating files. Help and version remain plain text, not JSON.
+`packageManagers`, `actions`, `humanSteps`, and `nextSteps`; dry-run lists `wouldCreate`
+without creating files. `humanSteps` identifies commands requiring a human and
+secure TTY (`requiresHuman` and `requiresTty`), with a reason for the handoff.
+Commands run from `projectDirectory`; dry-run steps apply after creation.
+Keep these steps pending until a human can complete them. Version 2 results
+lack this metadata; use the generated instructions for the same handoff.
+Help and version remain plain text, not JSON.
 
 On failure, use `error.code` and `error.recovery` rather than parsing decorative
 output. A failed dependency install can leave a valid generated project: inspect
@@ -111,6 +116,9 @@ to try another authentication route automatically.
 Read the generated `AGENTS.md`, README, and package scripts. Use their
 manager-specific installation, frontend/API check, Python check when present, and unified
 development commands; do not maintain a parallel command catalog in this skill.
+Run the documented checks before credential setup when dependencies are
+installed; they use mocks and require no provider credentials. The generated
+README also documents browser checks and their Chromium prerequisite.
 If dependencies were intentionally skipped, report those checks as pending.
 
 Once credentials are ready and starting the app is within the request, run the

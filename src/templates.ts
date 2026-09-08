@@ -8,6 +8,7 @@ import { cloudflareLivekitTemplate } from './templates/cloudflare-livekit/index.
 import type { TemplateDefinition } from './templates/types.js';
 
 export type {
+  HumanStep,
   TemplateConfiguration,
   TemplateDefinition,
 } from './templates/types.js';

@@ -612,6 +612,14 @@ describe('built CLI', () => {
       stack: 'cloudflare-livekit',
       wouldCreate: [],
     });
+    expect(output.humanSteps).toEqual([
+      {
+        command: 'npx create-spatius-app setup . --interactive',
+        reason: expect.any(String) as unknown,
+        requiresHuman: true,
+        requiresTty: true,
+      },
+    ]);
     expect(output.created).toContain('AGENTS.md');
     expect(output.created).toContain('web/App.tsx');
     expect(output.nextSteps).toContain(
@@ -638,6 +646,9 @@ describe('built CLI', () => {
       dryRun: true,
       ok: true,
     });
+    expect(output.humanSteps).toEqual([
+      expect.objectContaining({ requiresHuman: true, requiresTty: true }),
+    ]);
     expect(output.wouldCreate).toContain('AGENTS.md');
     expect(output.wouldCreate).toContain('agent/src/agent.py');
     await expect(readdir(root)).resolves.toEqual([]);

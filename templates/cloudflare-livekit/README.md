@@ -28,6 +28,22 @@ npx create-spatius-app setup . --interactive
 Follow the prompts to connect LiveKit and Spatius, select an avatar, and choose
 a matching voice. This configures local development only, not deployment.
 
+#### Manual credential setup
+
+Alternatively, copy `.dev.vars.example` to `.dev.vars` and
+`agent/.env.example` to `agent/.env.local`, then edit the copies locally:
+
+- Use the same LiveKit Cloud project’s `LIVEKIT_URL`, `LIVEKIT_API_KEY`, and
+  `LIVEKIT_API_SECRET` in both files.
+- Set the same `SPATIUS_APP_ID` in both files and set `SPATIUS_API_KEY` in
+  `agent/.env.local` to a key for that app.
+- In `.dev.vars`, set `SPATIUS_AVATAR_ID` to your chosen avatar.
+  `SPATIUS_AVATAR_BACKGROUND_URL` is optional and can stay empty. Keep the
+  example `CARTESIA_VOICE_ID` to use the default voice.
+
+Keep the example `LIVEKIT_AGENT_NAME` so the Worker dispatches the bundled
+agent. Both credential files are ignored by Git; keep their values local.
+
 ### 3. Start the app
 
 ```sh
@@ -37,3 +53,28 @@ __SPATIUS_DEV_COMMAND__
 This starts the Python agent first, then starts the frontend and Cloudflare
 Worker once the agent has registered with LiveKit. If registration takes more
 than 60 seconds, startup stops with an error.
+
+## Validate without credentials
+
+After installing both dependency sets, you can run these checks before account
+setup. Run them from the project root:
+
+```sh
+__SPATIUS_CHECK_COMMAND__
+__SPATIUS_AGENT_CHECK_COMMAND__
+```
+
+These check formatting, lint, types, unit tests, development-process behavior,
+and the production build. They do not require LiveKit or Spatius credentials.
+
+Browser tests use mocked services and also run without credentials:
+
+```sh
+npx playwright install chromium
+__SPATIUS_E2E_COMMAND__
+```
+
+The first command downloads Chromium if needed. On Linux, use
+`npx playwright install --with-deps chromium` to also install required system
+libraries. These tests verify the local UI flow; a real voice-avatar
+conversation still requires account setup and starting the app.

@@ -22,10 +22,6 @@ LiveKit room as the browser.
   enhanced noise-cancellation model in the browser; standard browser echo
   cancellation can stay enabled.
 
-The noise-cancellation dependency stays on the BVC-compatible `0.2.x` series.
-LiveKit's newer voice-isolation recommendation is Krisp VIVA; switching to that
-is a separate choice, not an implicit dependency upgrade.
-
 See [Cartesia TTS](https://docs.livekit.io/agents/models/tts/cartesia/),
 [expressive mode](https://docs.livekit.io/agents/models/tts/expressive/), and
 [noise cancellation](https://docs.livekit.io/transport/media/noise-cancellation/).
