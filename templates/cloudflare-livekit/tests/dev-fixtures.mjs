@@ -207,8 +207,11 @@ export async function fixture(
 }
 
 export async function readEvents(path) {
-  return (await readFile(path, 'utf8'))
-    .trim()
+  // A concurrent append can be visible before its terminating newline.
+  // Parse only complete records; the next poll will read the finished tail.
+  const contents = await readFile(path, 'utf8');
+  return contents
+    .slice(0, contents.lastIndexOf('\n') + 1)
     .split('\n')
     .filter(Boolean)
     .map((line) => JSON.parse(line));

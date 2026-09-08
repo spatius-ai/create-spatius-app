@@ -4,7 +4,11 @@ import {
   type PythonPackageManager,
   type SelectedPythonPackageManager,
 } from './package-managers.js';
-import { getTemplate, type TemplateDefinition } from './templates.js';
+import {
+  getTemplate,
+  type HumanStep,
+  type TemplateDefinition,
+} from './templates.js';
 
 export const OUTPUT_SCHEMA_VERSION = 3 as const;
 
@@ -25,6 +29,7 @@ export interface SuccessResult {
   created: string[];
   dryRun: boolean;
   generatorVersion: string;
+  humanSteps: HumanStep[];
   nextSteps: string[];
   ok: true;
   packageManagers: PackageManagersResult;
@@ -83,6 +88,7 @@ export function createSuccessResult({
     created: dryRun ? [] : [...files],
     dryRun,
     generatorVersion,
+    humanSteps: template.humanSteps.map((step) => ({ ...step })),
     nextSteps: template.nextSteps({
       dependenciesInstalled,
       javascriptPackageManager,

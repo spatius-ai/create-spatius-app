@@ -37,71 +37,17 @@ npm versions are immutable. Editing a GitHub release checkbox does not promote
 an npm version. To graduate a beta, publish a new normal release such as `v0.1.0`
 after `v0.1.0-beta.2`.
 
-## One-time setup
-
-1. Confirm the npm account that will own `create-spatius-app`, enable 2FA, and
-   check package-name availability with `npm view create-spatius-app`. If it
-   exists, confirm publishing rights; an E404 means the package was not found,
-   while authentication/network failures do not prove availability. The name
-   is unscoped, so GitHub organization membership does not grant npm ownership.
-2. Merge the publishing workflow and this guide into `main`. Enable GitHub
-   Actions, protect `main` with the CI checks, and restrict creation/movement of
-   `v*` tags to release maintainers. This workflow uses GitHub-hosted runners
-   and provenance; keep the source repository public.
-3. If the npm package does not exist yet, bootstrap it once from a clean
-   checkout of `main`. Use Node.js 24 and the pnpm version pinned in
-   `package.json`. Prepare `0.1.0-beta.0` with
-   `npm version 0.1.0-beta.0 --no-git-tag-version`, commit the root
-   `package.json` change, and merge it into `main` through normal review.
-   From that exact commit, run:
-
-   ```sh
-   corepack enable
-   pnpm install --frozen-lockfile
-   pnpm template:test:e2e
-   npm login
-   npm publish --tag beta --access public --provenance=false
-   ```
-
-   Install Python 3.13 and uv for template checks. The publish lifecycle also
-   runs `pnpm check` and builds the package. This first local publish disables
-   provenance because GitHub OIDC provenance is unavailable locally. Keep the
-   committed `publishConfig.provenance` enabled. This bootstrap version is
-   consumed; the first automated release must use a different version.
-
-4. On npm, open **create-spatius-app → Settings → Trusted publishing**, choose
-   **GitHub Actions**, and configure:
-
-   | Field                | Value                                      |
-   | -------------------- | ------------------------------------------ |
-   | Organization or user | `spatius-ai`                               |
-   | Repository           | `create-spatius-app`                       |
-   | Workflow filename    | `publish.yml`                              |
-   | Environment name     | Leave blank (the job does not declare one) |
-   | Allowed actions      | Allow direct `npm publish`                 |
-
-   No `NPM_TOKEN` or `NODE_AUTH_TOKEN` secret is needed. The workflow grants
-   `id-token: write`. Trusted publishing requires npm 11.5.1+ and Node 22.14+;
-   the workflow selects Node 24 with a compatible bundled npm. After a
-   successful automated release, consider selecting npm's **Require two-factor
-   authentication and disallow tokens** publishing setting.
-
-## Publish each subsequent release
+## Publish a release
 
 1. Merge feature, fix, and dependency PRs into `main` as usual. Leave the root
    package version alone. Wait for CI to pass on the code you want to release.
-2. In GitHub, open **Releases → Draft a new release**. For the next beta, enter:
-
-   | Field                | Value                            |
-   | -------------------- | -------------------------------- |
-   | Release title        | `v0.1.0-beta.1`                  |
-   | Tag                  | Create new tag `v0.1.0-beta.1`   |
-   | Target               | `main`, containing this workflow |
-   | Set as a pre-release | Checked                          |
-
-   Add release notes describing changes since the previous version. For later
-   betas, increment to `v0.1.0-beta.2`, `v0.1.0-beta.3`, and so on. For stable,
-   use `v0.1.0` and leave the pre-release checkbox unchecked.
+2. Check existing GitHub tags and npm versions, then choose an unused version
+   appropriate to the changes. The table above illustrates the channel rules;
+   its versions are examples, not suggestions for the next release.
+   In GitHub, open **Releases → Draft a new release**, create a new tag
+   `v<version>` targeting the verified commit on `main`, and add release notes.
+   For a stable version, leave **Set as a pre-release** unchecked (`latest`).
+   For a prerelease version, check it (`beta`).
 
 3. Click **Publish release**. CI derives the npm version from the tag; do not
    run `npm version` or `npm publish` locally for routine releases.
@@ -114,17 +60,45 @@ after `v0.1.0-beta.2`.
 
    ```sh
    npm view create-spatius-app dist-tags
-   npx create-spatius-app@beta --version
-   npx create-spatius-app@beta --help
+   npx create-spatius-app --version
+   npx create-spatius-app --help
    ```
 
-   For stable, substitute `@latest`. Complete the smoke tests and documentation
-   updates in [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) after the first stable
-   publication. A beta-only package does not make the README's unqualified
-   stable commands ready; retain the availability notice until stable exists.
-   The bootstrap publication also received a `latest` tag from npm, and removal
-   returned HTTP 400. Until the first stable publication, use `@beta` explicitly
-   for the newest beta and inspect dist-tags rather than assuming `latest` is stable.
+   For a prerelease, use `create-spatius-app@beta` in both commands. Confirm the
+   selected channel resolves to the version just published. Smoke-test JSON
+   dry-run and scaffold-only creation with `--no-install`, `--no-setup`, and
+   `--no-interactive`, then check `setup --help`. For prereleases, also confirm
+   `latest` still points to the intended stable version.
+
+6. Verify skill discovery with
+   `npx skills add spatius-ai/create-spatius-app --list` and test the README’s
+   skill-install command in an isolated project. Record the verification results
+   with the release. Browser authentication is a separate human smoke test.
+
+Repository README and template edits ship to npm with a new package release;
+they do not update older package versions or previously generated projects.
+
+## Trusted-publisher configuration reference
+
+The package is already published. Maintain npm ownership separately from GitHub
+organization membership: this package is unscoped. Keep GitHub Actions enabled,
+protect `main` with CI checks, restrict creation/movement of `v*` tags to release
+maintainers, and keep the repository public for the workflow’s provenance setup.
+
+On npm, **create-spatius-app → Settings → Trusted publishing** should configure
+**GitHub Actions** with:
+
+| Field                | Value                                      |
+| -------------------- | ------------------------------------------ |
+| Organization or user | `spatius-ai`                               |
+| Repository           | `create-spatius-app`                       |
+| Workflow filename    | `publish.yml`                              |
+| Environment name     | Leave blank (the job does not declare one) |
+| Allowed actions      | Allow direct `npm publish`                 |
+
+No `NPM_TOKEN` or `NODE_AUTH_TOKEN` secret is needed. The workflow grants
+`id-token: write` and selects Node 24 with a compatible bundled npm. Keep
+`publishConfig.provenance` enabled.
 
 ## Failures and retries
 

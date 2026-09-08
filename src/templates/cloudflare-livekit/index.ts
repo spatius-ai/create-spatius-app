@@ -5,9 +5,17 @@ import {
   pythonInstallCommands,
 } from '../../package-managers.js';
 import { assertSpatiusProject } from '../../setup/project.js';
-import type { TemplateDefinition } from '../types.js';
+import type { HumanStep, TemplateDefinition } from '../types.js';
 import { configureGeneratedTemplate } from './configure.js';
 import { createInstallPlan } from './install.js';
+
+const credentialSetupStep: HumanStep = {
+  command: 'npx create-spatius-app setup . --interactive',
+  reason:
+    'Connect LiveKit and Spatius accounts and select an avatar and voice in a secure interactive terminal. Never paste secrets into chat.',
+  requiresHuman: true,
+  requiresTty: true,
+};
 
 const aliases: Readonly<Record<string, string>> = {
   'dev.vars.example': '.dev.vars.example',
@@ -52,6 +60,7 @@ export const cloudflareLivekitTemplate: TemplateDefinition = {
   },
   configure: configureGeneratedTemplate,
   createInstallPlan,
+  humanSteps: [credentialSetupStep],
   nextSteps({
     credentialsConfigured = false,
     dependenciesInstalled,
@@ -68,9 +77,7 @@ export const cloudflareLivekitTemplate: TemplateDefinition = {
             javascriptInstallCommand(javascriptPackageManager),
             ...pythonInstallCommands(pythonPackageManager, platform),
           ]),
-      ...(credentialsConfigured
-        ? []
-        : ['npx create-spatius-app setup . --interactive']),
+      ...(credentialsConfigured ? [] : [credentialSetupStep.command]),
       javascriptRunCommand(javascriptPackageManager, 'dev'),
     ];
   },

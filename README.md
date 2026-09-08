@@ -2,12 +2,10 @@
 
 Create a voice-avatar app with Spatius and React. Choose LiveKit with Cloudflare or Railway hosting, or Agora Conversational AI on Zeabur.
 
-> Preview: the CLI is not yet published to npm. The commands below will be
-> available after the first release.
-
 ## Quick start
 
-Requires Node.js 22 or newer.
+Requires Node.js 22.12+ and Python 3.11–3.14. You’ll also need a LiveKit Cloud
+project and a [Spatius Studio](https://app.spatius.ai) account.
 
 ```sh
 npx create-spatius-app my-app

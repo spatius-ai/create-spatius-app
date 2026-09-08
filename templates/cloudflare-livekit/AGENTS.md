@@ -18,6 +18,10 @@ Run from the project root:
 - Start only the Python agent: `__SPATIUS_AGENT_DEV_COMMAND__`
 - Check frontend/Worker: `__SPATIUS_CHECK_COMMAND__`
 - Check Python: `__SPATIUS_AGENT_CHECK_COMMAND__`
+- Check browser flows with mocks: `__SPATIUS_E2E_COMMAND__`
+
+All checks can run after dependency installation, before credential setup.
+Browser tests require Chromium; see README.md for the installation command.
 
 ## Working guidelines
 
