@@ -125,3 +125,19 @@ jobs:
           name: template-browser-results-${{ strategy.job-index }}
           path: test-results/
           if-no-files-found: ignore
+
+  template-result:
+    name: Generated application template
+    needs: template
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Require every template variant to pass
+        env:
+          TEMPLATE_RESULT: ${{ needs.template.result }}
+        run: |
+          if [ "$TEMPLATE_RESULT" != "success" ]; then
+            echo "Template matrix did not succeed: $TEMPLATE_RESULT"
+            exit 1
+          fi
