@@ -569,3 +569,39 @@ select:disabled {
     max-width: 160px;
   }
 }
+
+.scenario-panel {
+  position: absolute;
+  left: 1.5rem;
+  top: 7rem;
+  width: min(24rem, calc(100vw - 3rem));
+  max-height: 55vh;
+  overflow: auto;
+  padding: 1.25rem;
+  border-radius: 1rem;
+  z-index: 5;
+}
+.scenario-panel h2 {
+  text-transform: capitalize;
+}
+.scenario-panel button,
+.scenario-panel input {
+  margin: 0.3rem;
+  padding: 0.6rem;
+  border: 1px solid #8b8b8b;
+  border-radius: 0.5rem;
+  background: #ffffff;
+  color: #171717;
+}
+.scenario-panel button:disabled {
+  opacity: 0.5;
+}
+.scenario-panel p {
+  margin: 0.6rem 0;
+}
+@media (max-width: 800px) {
+  .scenario-panel {
+    top: 6rem;
+    max-height: 35vh;
+  }
+}

@@ -1,3 +1,4 @@
+import { selectCatalog, stacks, scenarios } from './catalog.js';
 import { intro, note, outro, spinner } from '@clack/prompts';
 import { determineAgent } from '@vercel/detect-agent';
 import { Command, CommanderError, Option } from 'commander';
@@ -51,6 +52,8 @@ interface PackageMetadata {
 }
 
 interface CliOptions {
+  stack?: string;
+  template?: string;
   debug: boolean;
   dryRun: boolean;
   install?: boolean;
@@ -314,6 +317,8 @@ async function runCreateCommand(
   rawOptions: Partial<CliOptions>,
 ): Promise<void> {
   const options: CliOptions = {
+    stack: rawOptions.stack,
+    template: rawOptions.template,
     debug: rawOptions.debug === true,
     dryRun: rawOptions.dryRun === true,
     install: rawOptions.install,
@@ -363,6 +368,8 @@ async function runCreateCommand(
       );
     }
 
+    const selection = await selectCatalog({ ...options, interactive, prompts });
+    const template = getTemplate(`${selection.stack}/${selection.template}`);
     const projectDirectoryInput = await resolveProjectDirectoryInput({
       argument: projectDirectoryArgument,
       interactive,
@@ -383,7 +390,6 @@ async function runCreateCommand(
       assertPackageManagersAvailable(packageManagers);
     }
 
-    const template = getTemplate();
     const configuration = { packageManagers };
     const scaffold = options.dryRun
       ? await createScaffoldPlan({
@@ -597,6 +603,16 @@ async function runSetupCommand(
 
 function addCreateOptions(command: Command): Command {
   return command
+    .addOption(
+      new Option('--stack <stack>', 'application and deployment stack').choices(
+        Object.keys(stacks),
+      ),
+    )
+    .addOption(
+      new Option('--template <template>', 'application template').choices(
+        Object.keys(scenarios),
+      ),
+    )
     .option('-y, --yes', 'accept safe defaults without prompting')
     .addOption(new Option('--interactive', 'force interactive prompts'))
     .addOption(new Option('--no-interactive', 'disable interactive prompts'))

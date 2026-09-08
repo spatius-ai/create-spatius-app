@@ -18,6 +18,7 @@ from livekit.agents import (
 from livekit.plugins import noise_cancellation, spatius
 
 from src.dispatch_metadata import parse_agent_dispatch_metadata
+from src.scenario import SCENARIO, ScenarioSession
 
 logger = logging.getLogger("spatius-agent")
 
@@ -25,10 +26,11 @@ load_dotenv(".env.local")
 
 
 class Assistant(Agent):
-    def __init__(self) -> None:
+    def __init__(self, instructions: str | None = None) -> None:
         super().__init__(
             llm=inference.LLM(model="google/gemma-4-31b-it"),
-            instructions=textwrap.dedent(
+            instructions=instructions
+            or textwrap.dedent(
                 """\
                 You are a warm, concise voice assistant speaking through a digital
                 avatar. Help the user directly and conversationally.
@@ -82,8 +84,10 @@ async def spatius_agent(ctx: JobContext) -> None:
     avatar = spatius.AvatarSession(avatar_id=dispatch_metadata.avatar_id)
     await avatar.start(session, room=ctx.room)
 
+    scenario = ScenarioSession(dispatch_metadata.context)
+    assistant = Assistant(await scenario.load_instructions())
     await session.start(
-        agent=Assistant(),
+        agent=assistant,
         room=ctx.room,
         room_options=room_io.RoomOptions(
             audio_input=room_io.AudioInputOptions(
@@ -91,12 +95,16 @@ async def spatius_agent(ctx: JobContext) -> None:
             ),
         ),
     )
+    await scenario.attach(ctx, session, assistant)
     logger.info("Spatius voice session started")
     # The avatar service can join before the browser has loaded its renderer.
     # Wait for a human/browser participant, not another agent or avatar worker.
     # This also returns immediately if the browser joined during startup.
     await ctx.wait_for_participant(kind=rtc.ParticipantKind.PARTICIPANT_KIND_STANDARD)
     # Use the normal speech pipeline so the avatar and transcript stay in sync.
+    if SCENARIO in ("tutoring", "live-streaming", "customer-service"):
+        return
+    scenario.scripted.add("Hi! I'm here to help. What would you like to talk about?")
     await session.say(
         "Hi! I'm here to help. What would you like to talk about?",
         allow_interruptions=True,

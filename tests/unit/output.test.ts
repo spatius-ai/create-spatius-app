@@ -34,7 +34,7 @@ describe('structured output', () => {
     });
     expect(result.nextSteps).toEqual(['fixture run']);
     expect(result.humanSteps).toEqual([]);
-    expect(result.template).toBe('default');
+    expect(result.template).toBe('minimal');
     expect(validateResult(result)).toBe(true);
   });
 

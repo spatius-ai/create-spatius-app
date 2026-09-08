@@ -1,3 +1,6 @@
+import { readProjectConfig } from './project-config.js';
+import { stacks, scenarios, type StackId, type ScenarioId } from './catalog.js';
+import { composeTemplate } from './templates/composed.js';
 import { fileURLToPath } from 'node:url';
 
 import { CliError, EXIT_CODES } from './errors.js';
@@ -11,15 +14,26 @@ export type {
 } from './templates/types.js';
 
 export const DEFAULT_TEMPLATE_ID = 'cloudflare-livekit' as const;
-export const templateRegistry = {
-  [DEFAULT_TEMPLATE_ID]: cloudflareLivekitTemplate,
-} as const satisfies Record<string, TemplateDefinition>;
-export type TemplateId = keyof typeof templateRegistry;
-
+export const templateRegistry: Record<string, TemplateDefinition> =
+  Object.fromEntries(
+    (Object.keys(stacks) as StackId[]).flatMap((stack) =>
+      (Object.keys(scenarios) as ScenarioId[]).map((scenario) => {
+        const template = composeTemplate(stack, scenario);
+        return [template.id, template];
+      }),
+    ),
+  );
+export type TemplateId = string;
 export function getTemplate(
   id: TemplateId = DEFAULT_TEMPLATE_ID,
 ): TemplateDefinition {
-  return templateRegistry[id];
+  if (id === DEFAULT_TEMPLATE_ID) return cloudflareLivekitTemplate;
+  const template = templateRegistry[id];
+  if (!template)
+    throw new CliError('INVALID_ARGUMENT', `Unknown template: ${id}`, {
+      exitCode: EXIT_CODES.invalidArgument,
+    });
+  return template;
 }
 
 export function resolveTemplateDirectory(
@@ -32,8 +46,10 @@ export function resolveTemplateDirectory(
 
 export async function resolveProjectTemplate(
   targetDirectory: string,
-  templates: readonly TemplateDefinition[] = Object.values(templateRegistry),
+  templates: readonly TemplateDefinition[] = [cloudflareLivekitTemplate],
 ): Promise<TemplateDefinition> {
+  const config = await readProjectConfig(targetDirectory);
+  if (config) return getTemplate(`${config.stack}/${config.template}`);
   const matches: TemplateDefinition[] = [];
   for (const template of templates) {
     if (await template.setup.recognizes(targetDirectory))

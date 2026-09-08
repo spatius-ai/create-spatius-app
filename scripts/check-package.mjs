@@ -1,7 +1,7 @@
 import { execFile } from 'node:child_process';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
@@ -75,7 +75,13 @@ try {
         },
       });
       for (const entry of plan.entries)
-        requiredFiles.add(template.directory + '/' + entry.source);
+        requiredFiles.add(
+          (entry.directory
+            ? relative(repositoryRoot, entry.directory).split('\\').join('/')
+            : template.directory) +
+            '/' +
+            entry.source,
+        );
     }
   }
 

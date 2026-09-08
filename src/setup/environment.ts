@@ -1,3 +1,4 @@
+import { webEnvironmentPath } from '../project-config.js';
 import {
   chmod,
   lstat,
@@ -304,10 +305,11 @@ async function readOptionalCredentialFile(
 export async function readCredentialFileState(
   targetDirectory: string,
 ): Promise<CredentialFileState> {
+  const webPath = await webEnvironmentPath(targetDirectory);
   const [worker, agent, workerExample] = await Promise.all([
-    readOptionalCredentialFile(join(targetDirectory, '.dev.vars')),
+    readOptionalCredentialFile(join(targetDirectory, webPath)),
     readOptionalCredentialFile(join(targetDirectory, 'agent', '.env.local')),
-    readOptionalCredentialFile(join(targetDirectory, '.dev.vars.example')),
+    readOptionalCredentialFile(join(targetDirectory, webPath + '.example')),
   ]);
 
   return {
@@ -438,12 +440,13 @@ export async function writeCredentialFilesAtomically(
   contents: CredentialFileContents,
   fileSystem: AtomicCredentialFileSystem = defaultAtomicFileSystem,
 ): Promise<void> {
+  const webPath = await webEnvironmentPath(targetDirectory);
   const nonce = randomUUID();
   const targets: AtomicTarget[] = [
     {
       backupMoved: false,
       backupPath: join(targetDirectory, `.dev.vars.${nonce}.backup`),
-      destinationPath: join(targetDirectory, '.dev.vars'),
+      destinationPath: join(targetDirectory, webPath),
       hadOriginal: false,
       installed: false,
       stagedPath: join(targetDirectory, `.dev.vars.${nonce}.tmp`),
@@ -532,8 +535,9 @@ export async function writeCredentialFilesAtomically(
 export async function readCredentialExamples(
   targetDirectory: string,
 ): Promise<CredentialFileContents> {
+  const webPath = await webEnvironmentPath(targetDirectory);
   const [worker, agent] = await Promise.all([
-    readFile(join(targetDirectory, '.dev.vars.example'), 'utf8'),
+    readFile(join(targetDirectory, webPath + '.example'), 'utf8'),
     readFile(join(targetDirectory, 'agent', '.env.example'), 'utf8'),
   ]);
   return { agent, worker };

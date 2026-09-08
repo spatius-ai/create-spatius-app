@@ -26,6 +26,7 @@
         "actions",
         "packageManagers",
         "nextSteps",
+        "stack",
         "humanSteps"
       ],
       "properties": {
@@ -48,7 +49,7 @@
           "type": "string"
         },
         "template": {
-          "const": "default"
+          "type": "string"
         },
         "created": {
           "type": "array",
@@ -81,7 +82,7 @@
         "packageManagers": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["javascript", "python"],
+          "required": ["javascript"],
           "properties": {
             "javascript": {
               "enum": ["npm", "pnpm", "bun"]
@@ -96,6 +97,9 @@
           "items": {
             "type": "string"
           }
+        },
+        "stack": {
+          "type": "string"
         },
         "humanSteps": {
           "type": "array",

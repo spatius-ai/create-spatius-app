@@ -1,0 +1,10 @@
+node_modules
+dist
+.git
+.env*
+.dev.vars*
+agent/.venv
+agent/.env*
+agent/tests
+coverage
+test-results

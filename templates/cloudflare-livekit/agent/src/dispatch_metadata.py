@@ -1,5 +1,5 @@
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 AGENT_DISPATCH_METADATA_VERSION = 1
 DEFAULT_VOICE_ID = "9626c31c-bec5-4cca-baa8-f8ba9e84c8bc"  # Jacqueline
@@ -12,6 +12,7 @@ class DispatchMetadataError(ValueError):
 @dataclass(frozen=True)
 class AgentDispatchMetadata:
     avatar_id: str
+    context: dict = field(default_factory=dict)
     voice_id: str = DEFAULT_VOICE_ID
 
 
@@ -61,4 +62,13 @@ def parse_agent_dispatch_metadata(raw_metadata: str) -> AgentDispatchMetadata:
                 "Agent dispatch metadata needs a non-empty voice.id."
             )
 
-    return AgentDispatchMetadata(avatar_id=avatar_id.strip(), voice_id=voice_id.strip())
+    context = payload.get("context", {})
+    if not isinstance(context, dict):
+        raise DispatchMetadataError("Context must be an object.")
+    if "participant" in context and (
+        not isinstance(context["participant"], str) or not context["participant"]
+    ):
+        raise DispatchMetadataError("Invalid participant identity.")
+    return AgentDispatchMetadata(
+        avatar_id=avatar_id.strip(), voice_id=voice_id.strip(), context=context
+    )

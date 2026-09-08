@@ -50,6 +50,10 @@ async function runCli(
 }
 
 const defaultCreateOptions = [
+  '--stack',
+  'cloudflare-livekit',
+  '--template',
+  'minimal',
   '--package-manager',
   'pnpm',
   '--python-package-manager',
@@ -73,7 +77,7 @@ async function runInteractiveCli(
 ): Promise<{ stderr: string; stdout: string }> {
   const fakePath = await createFakeManagerPath(currentWorkingDirectory, 'pnpm');
   const result = await runSpawnedCli(
-    ['--interactive'],
+    ['--interactive', '--stack', 'cloudflare-livekit', '--template', 'minimal'],
     currentWorkingDirectory,
     `${answer}\n\n\nn\n`,
     { PATH: fakePath },
@@ -604,7 +608,8 @@ describe('built CLI', () => {
       ok: true,
       packageManagers: { javascript: 'pnpm', python: 'uv' },
       schemaVersion: 3,
-      template: 'default',
+      template: 'minimal',
+      stack: 'cloudflare-livekit',
       wouldCreate: [],
     });
     expect(output.humanSteps).toEqual([
@@ -673,8 +678,8 @@ describe('built CLI', () => {
       const created = JSON.parse(
         (await runCli([target, ...options], root)).stdout,
       ) as { template: string; created: string[]; nextSteps: string[] };
-      expect(dryRun.template).toBe('default');
-      expect(created.template).toBe('default');
+      expect(dryRun.template).toBe('minimal');
+      expect(created.template).toBe('minimal');
       expect(created.created).toEqual(dryRun.wouldCreate);
       expect(created.created).toEqual(await generatedFiles(target));
       expect(created.nextSteps.at(-1)).toBe(`${javascript} run dev`);
@@ -1188,7 +1193,16 @@ if [ "$1" = "--version" ]; then echo 1.0; exit 0; fi
   it('returns exit status 130 when an interactive prompt is cancelled', async () => {
     const root = await createTemporaryDirectory();
 
-    const result = await runSpawnedCli(['--interactive'], root);
+    const result = await runSpawnedCli(
+      [
+        '--interactive',
+        '--stack',
+        'cloudflare-livekit',
+        '--template',
+        'minimal',
+      ],
+      root,
+    );
 
     expect(result.code).toBe(130);
     expect(result.stderr).toContain('Cancelled [CANCELLED]');
@@ -1258,7 +1272,16 @@ if [ "$1" = "--version" ]; then echo 1.0; exit 0; fi
     await createFakeExecutable(fakePath, 'bun', '1.3.0');
     await createFakeExecutable(fakePath, 'npm', '11.9.0');
     const result = await runSpawnedCli(
-      ['ordered-app', '--interactive', '--no-install', '--no-setup'],
+      [
+        'ordered-app',
+        '--interactive',
+        '--no-install',
+        '--no-setup',
+        '--stack',
+        'cloudflare-livekit',
+        '--template',
+        'minimal',
+      ],
       root,
       '\n\n',
       { PATH: fakePath, npm_config_user_agent: '' },
@@ -1278,7 +1301,13 @@ if [ "$1" = "--version" ]; then echo 1.0; exit 0; fi
     const fakePath = await createFakeManagerPath(root);
     const environment = { PATH: fakePath };
     const interactive = await runSpawnedCli(
-      ['--interactive'],
+      [
+        '--interactive',
+        '--stack',
+        'cloudflare-livekit',
+        '--template',
+        'minimal',
+      ],
       root,
       'prompt-app\n\n\nn\n',
       environment,
@@ -1319,6 +1348,7 @@ if [ "$1" = "--version" ]; then echo 1.0; exit 0; fi
 
     const result = await runCli(['fallback-app', '--yes', '--json'], root, {
       PATH: emptyPath,
+      npm_config_user_agent: 'pnpm/12.3.4',
     });
     const output = JSON.parse(result.stdout) as {
       actions: { dependenciesInstalled: boolean };

@@ -54,7 +54,7 @@ if (role === 'lk' && args[0] === '--version') {
 } else if (role === 'lk' && args.includes('--help')) {
   if (process.env.DEV_TEST_PROBE === 'help-hang') { hold(); ready(); }
   else { console.log(process.env.DEV_TEST_HELP ?? 'NAME: lk agent dev\\nUSAGE: lk agent dev [entrypoint]'); process.exit(Number(process.env.DEV_TEST_HELP_EXIT ?? 0)); }
-} else if (role === 'grandchild') {
+} else if (role === 'grandchild' || role === 'api') {
   hold(); ready();
 } else {
   if (role !== 'web' && process.env.SPATIUS_DEV_READY_FILE && process.env.DEV_TEST_RUNTIME_HOLD === '1') {
@@ -129,6 +129,7 @@ export async function fixture(
     await writeFile(path, body, { mode: 0o755 });
     return path;
   };
+  await executable('tsx', bin, 'api');
   if (lk) await executable('lk');
   if (uv) await executable('uv');
   if (python) {
@@ -206,8 +207,11 @@ export async function fixture(
 }
 
 export async function readEvents(path) {
-  return (await readFile(path, 'utf8'))
-    .trim()
+  // A concurrent append can be visible before its terminating newline.
+  // Parse only complete records; the next poll will read the finished tail.
+  const contents = await readFile(path, 'utf8');
+  return contents
+    .slice(0, contents.lastIndexOf('\n') + 1)
     .split('\n')
     .filter(Boolean)
     .map((line) => JSON.parse(line));

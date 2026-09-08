@@ -30,6 +30,14 @@ export interface HumanStep {
 
 export interface TemplateDefinition {
   readonly id: string;
+  readonly stack?: string;
+  readonly scenario?: string;
+  readonly requiresPython?: boolean;
+  /** Ordered bundled layers. Overrides must name exact generated paths. */
+  readonly layers?: readonly {
+    directory: string;
+    overrides?: readonly string[];
+  }[];
   /** Relative to the installed generator package, never the caller's cwd. */
   readonly directory: string;
   readonly description: string;

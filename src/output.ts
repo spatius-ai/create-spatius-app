@@ -35,7 +35,8 @@ export interface SuccessResult {
   packageManagers: PackageManagersResult;
   projectDirectory: string;
   schemaVersion: typeof OUTPUT_SCHEMA_VERSION;
-  template: 'default';
+  template: string;
+  stack: string;
   wouldCreate: string[];
 }
 
@@ -101,7 +102,8 @@ export function createSuccessResult({
     },
     projectDirectory,
     schemaVersion: OUTPUT_SCHEMA_VERSION,
-    template: 'default',
+    template: template.scenario ?? 'minimal',
+    stack: template.stack ?? 'cloudflare-livekit',
     wouldCreate: dryRun ? [...files] : [],
   };
 }

@@ -6,11 +6,11 @@ license: MIT
 
 # Bootstrap a Spatius application
 
-Use the generator rather than assembling the template yourself. The supported
-stack is React with Spatius avatars, a Cloudflare Worker serving the frontend
-and API together, and a separate Python LiveKit agent using LiveKit Inference.
-If the user requests an incompatible stack, explain this limitation before
-creating anything; there is no public template picker yet.
+Use the generator rather than assembling the template yourself. Choose a stack
+first, then a compatible scenario. LiveKit stacks use React with Spatius avatars,
+Cloudflare or Railway web hosting, and a Python agent on LiveKit Cloud or Railway.
+LiveKit Cloud supplies RTC and inference in every LiveKit stack. Available scenarios
+are minimal, tutoring, live streaming, customer service, and companion.
 
 ## 1. Choose the invocation and destination
 
@@ -104,7 +104,8 @@ markers or enabling test-only environment variables. Do not combine setup with
 `--json`, `--yes`, or `--dry-run`, or pipe secrets/approval answers into it.
 
 Do not ask for secrets in chat, read out the resulting files, or log their
-values. The ignored files are `.dev.vars` and `agent/.env.local`. Existing
+values. The ignored files are `.dev.vars` (Cloudflare) or `.env.local` (Node),
+and `agent/.env.local` for LiveKit. Existing
 credentials stay unchanged unless the user explicitly replaces them. If the
 wizard is unavailable, point to the generated README's manual instructions for
 the user to follow locally. Cancellation leaves setup pending, not permission
@@ -113,7 +114,7 @@ to try another authentication route automatically.
 ## 4. Verify, start, and hand off
 
 Read the generated `AGENTS.md`, README, and package scripts. Use their
-manager-specific installation, frontend/Worker check, Python check, and unified
+manager-specific installation, frontend/API check, Python check when present, and unified
 development commands; do not maintain a parallel command catalog in this skill.
 Run the documented checks before credential setup when dependencies are
 installed; they use mocks and require no provider credentials. The generated
@@ -138,3 +139,7 @@ and **running**; a successful generator exit does not prove live provider health
 Hand ongoing customization to the project's `AGENTS.md`. Deployment, installing
 other skills, publishing, and changing unrelated agent configuration are not
 part of this workflow.
+
+## Stack and template selection
+
+Use `--stack` and `--template` for deterministic generation. Stack selection precedes template selection, and singleton choices are automatic. Use `--help` for available values. JSON schema version 3 reports both values. Defaults are `cloudflare-livekit` and `minimal`.

@@ -1,3 +1,5 @@
+import { ScenarioPanel } from './scenario-panel.js';
+import { scenario, type ConversationControls } from '../scenario.js';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ConnectionState, Track } from 'livekit-client';
 import {
@@ -169,7 +171,12 @@ function ConversationContent({
   }, [attempt]);
 
   useEffect(() => {
-    if (!ready || microphoneRequested.current || attempt.abort.signal.aborted)
+    if (
+      scenario === 'live-streaming' ||
+      !ready ||
+      microphoneRequested.current ||
+      attempt.abort.signal.aborted
+    )
       return;
     microphoneRequested.current = true;
     void toggleMicrophone(true);
@@ -231,8 +238,42 @@ function ConversationContent({
     return stream.send(message);
   };
 
+  const controls: ConversationControls = {
+    speak: async (text) => {
+      await command('say', { text });
+    },
+    interrupt: async () => {
+      await command('interrupt', {});
+    },
+    setMode: async (mode) => {
+      await command('mode', { mode });
+      await attempt.setMicrophone(mode === 'free-talk');
+    },
+  };
+  async function command(method: string, payload: object) {
+    const participant = agent.internal.agentParticipant;
+    if (
+      !interactive ||
+      !participant ||
+      participant.attributes['spatius.ready'] !== '1'
+    )
+      throw new Error('Agent is not ready');
+    await attempt.room.localParticipant.performRpc({
+      destinationIdentity: participant.identity,
+      method: `spatius.${method}`,
+      payload: JSON.stringify(payload),
+      responseTimeout: 30,
+    });
+  }
   return (
     <div className="conversation-ui">
+      <ScenarioPanel
+        controls={controls}
+        ready={
+          interactive &&
+          agent.internal.agentParticipant?.attributes['spatius.ready'] === '1'
+        }
+      />
       <header className="session-header">
         <div className="identity-pill">
           <span className="presence-dot" data-live={ready} />

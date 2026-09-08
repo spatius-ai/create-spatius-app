@@ -157,7 +157,7 @@ describe('packed CLI', () => {
     };
     expect(result).toMatchObject({
       ok: true,
-      template: 'default',
+      template: 'minimal',
       schemaVersion: 3,
       humanSteps: [{ requiresHuman: true, requiresTty: true }],
     });
@@ -186,8 +186,11 @@ describe('packed CLI', () => {
       { cwd: root },
     );
     expect(JSON.parse(registryResult.stdout)).toEqual({
-      ids: ['cloudflare-livekit'],
-      selected: 'cloudflare-livekit',
+      ids: expect.arrayContaining([
+        'cloudflare-livekit/minimal',
+        'railway-livekit/companion',
+      ]) as unknown,
+      selected: 'cloudflare-livekit/minimal',
       directory: await realpath(
         join(packageRoot, 'templates/cloudflare-livekit'),
       ),

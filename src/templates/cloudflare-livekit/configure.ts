@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { readFile, writeFile } from 'node:fs/promises';
+import { access, readFile, writeFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 
 import {
@@ -216,12 +216,24 @@ export async function configureGeneratedTemplate(
   await Promise.all(
     [
       '.dev.vars.example',
+      '.env.local.example',
       'wrangler.jsonc',
       'agent/src/agent.py',
       'agent/README.md',
       'worker/index.test.ts',
     ].map(async (relativePath) =>
-      renderFile(join(targetDirectory, relativePath), agentReplacements),
+      access(join(targetDirectory, relativePath))
+        .then(() =>
+          renderFile(join(targetDirectory, relativePath), agentReplacements),
+        )
+        .catch((error: unknown) => {
+          if (!(
+            error instanceof Error &&
+            'code' in error &&
+            error.code === 'ENOENT'
+          ))
+            throw error;
+        }),
     ),
   );
   await Promise.all(
