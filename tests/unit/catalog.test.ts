@@ -1,13 +1,8 @@
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import {
-  selectCatalog,
-  stacks,
-  availableScenarios,
-  validateSelection,
-} from '../../src/catalog.js';
+import { selectCatalog, stacks, validateSelection } from '../../src/catalog.js';
 import { getTemplate, resolveProjectTemplate } from '../../src/templates.js';
 import { createScaffoldPlan, scaffoldProject } from '../../src/scaffold.js';
 import {
@@ -33,15 +28,35 @@ const configuration = {
     python: selectPythonPackageManager({ javascript: [], python: [] }, 'uv'),
   },
 };
-describe('stack and scenario catalog', () => {
+describe('stack catalog', () => {
+  it('rejects old scenario configuration without rewriting it', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'spatius-old-config-'));
+    directories.push(directory);
+    const path = join(directory, 'spatius.config.json');
+    const contents = JSON.stringify({
+      version: 1,
+      stack: 'cloudflare-livekit',
+      template: 'minimal',
+    });
+    await writeFile(path, contents);
+    await expect(resolveProjectTemplate(directory)).rejects.toThrow(
+      'Unsupported spatius.config.json version',
+    );
+    expect(await readFile(path, 'utf8')).toBe(contents);
+  });
+  it('rejects old composite identifiers', () => {
+    expect(() => getTemplate('cloudflare-livekit/minimal')).toThrow(
+      'Unknown template',
+    );
+  });
   it('keeps defaults without prompting', async () => {
     const choose = vi.fn();
     expect(
       await selectCatalog({ interactive: false, prompts: { choose } }),
-    ).toEqual({ stack: 'cloudflare-livekit', template: 'minimal' });
+    ).toEqual({ stack: 'cloudflare-livekit' });
     expect(choose).not.toHaveBeenCalled();
   });
-  it('asks stack before template', async () => {
+  it('asks only for the stack', async () => {
     const messages: string[] = [];
     const result = await selectCatalog({
       interactive: true,
@@ -52,42 +67,29 @@ describe('stack and scenario catalog', () => {
         },
       },
     });
-    expect(messages).toEqual(['Which stack?', 'Which template?']);
-    expect(result.template).toBe('minimal');
+    expect(messages).toEqual(['Which stack?']);
+    expect(result.stack).toBe('cloudflare-livekit');
   });
   it('rejects unknown selections', () => {
-    expect(() => validateSelection('invalid', 'minimal')).toThrow(
-      'Unsupported',
-    );
-    expect(() => validateSelection('cloudflare-livekit', 'invalid')).toThrow(
-      'Unsupported',
-    );
+    expect(() => validateSelection('invalid')).toThrow('Unsupported');
   });
   it('honors explicit selections without prompting', async () => {
     const choose = vi.fn();
     expect(
       await selectCatalog({
         stack: 'railway-livekit',
-        template: 'tutoring',
         interactive: true,
         prompts: { choose },
       }),
-    ).toEqual({ stack: 'railway-livekit', template: 'tutoring' });
+    ).toEqual({ stack: 'railway-livekit' });
     expect(choose).not.toHaveBeenCalled();
   });
-  it.each(
-    Object.keys(stacks).flatMap((stack) =>
-      availableScenarios(stack as keyof typeof stacks).map((scenario) => [
-        stack,
-        scenario,
-      ]),
-    ),
-  )(
-    'generates and recognizes %s / %s with an exact dry run',
-    async (stack, scenario) => {
+  it.each(Object.keys(stacks))(
+    'generates and recognizes %s with an exact dry run',
+    async (stack) => {
       const directory = await mkdtemp(join(tmpdir(), 'spatius-catalog-'));
       directories.push(directory);
-      const template = getTemplate(`${stack}/${scenario}`);
+      const template = getTemplate(stack);
       const options = { targetDirectory: directory, configuration, template };
       const plan = await createScaffoldPlan(options);
       const result = await scaffoldProject(options);
@@ -96,20 +98,18 @@ describe('stack and scenario catalog', () => {
         JSON.parse(
           await readFile(join(directory, 'spatius.config.json'), 'utf8'),
         ),
-      ).toEqual({ version: 1, stack, template: scenario });
+      ).toEqual({ version: 2, stack });
       expect((await resolveProjectTemplate(directory)).id).toBe(template.id);
       if (stack !== 'zeabur-agora') await assertSpatiusProject(directory);
       const node = !stack.startsWith('cloudflare');
       expect(result.files.includes('server/index.ts')).toBe(node);
       expect(result.files.includes('wrangler.jsonc')).toBe(!node);
-      if (node && scenario === 'companion') {
-        expect(
-          await readFile(join(directory, 'server/index.ts'), 'utf8'),
-        ).toContain("import { database } from './database.js'");
-      }
-      expect(result.files.includes('migrations/0001_memory.sql')).toBe(
-        scenario === 'companion',
-      );
+      expect(
+        result.files.some((file) =>
+          /scenario|memory|database|migrations/.test(file),
+        ),
+      ).toBe(false);
+      expect(result.files).toContain('DEPLOYMENT.md');
       expect(result.files.includes('agent/railway.json')).toBe(
         stack.endsWith('railway') || stack === 'railway-livekit',
       );

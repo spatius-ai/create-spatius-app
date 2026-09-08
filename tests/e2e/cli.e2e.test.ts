@@ -52,8 +52,6 @@ async function runCli(
 const defaultCreateOptions = [
   '--stack',
   'cloudflare-livekit',
-  '--template',
-  'minimal',
   '--package-manager',
   'pnpm',
   '--python-package-manager',
@@ -77,7 +75,7 @@ async function runInteractiveCli(
 ): Promise<{ stderr: string; stdout: string }> {
   const fakePath = await createFakeManagerPath(currentWorkingDirectory, 'pnpm');
   const result = await runSpawnedCli(
-    ['--interactive', '--stack', 'cloudflare-livekit', '--template', 'minimal'],
+    ['--interactive', '--stack', 'cloudflare-livekit'],
     currentWorkingDirectory,
     `${answer}\n\n\nn\n`,
     { PATH: fakePath },
@@ -454,7 +452,7 @@ afterEach(async () => {
 });
 
 describe('built CLI', () => {
-  it('generates Agora minimal without a Python toolchain or agent files', async () => {
+  it('generates Agora without a Python toolchain or agent files', async () => {
     const directory = await createTemporaryDirectory();
     const { stdout } = await runCli(
       [
@@ -473,7 +471,6 @@ describe('built CLI', () => {
     expect(result).toMatchObject({
       ok: true,
       stack: 'zeabur-agora',
-      template: 'minimal',
       humanSteps: [{ requiresHuman: true, requiresTty: true }],
       packageManagers: { javascript: 'npm' },
     });
@@ -637,8 +634,7 @@ describe('built CLI', () => {
       dryRun: false,
       ok: true,
       packageManagers: { javascript: 'pnpm', python: 'uv' },
-      schemaVersion: 3,
-      template: 'minimal',
+      schemaVersion: 4,
       stack: 'cloudflare-livekit',
       wouldCreate: [],
     });
@@ -703,13 +699,13 @@ describe('built CLI', () => {
       const dryRun = JSON.parse(
         (await runCli(['dry-' + javascript, '--dry-run', ...options], root))
           .stdout,
-      ) as { template: string; wouldCreate: string[] };
+      ) as { stack: string; wouldCreate: string[] };
       const target = join(root, 'created-' + javascript);
       const created = JSON.parse(
         (await runCli([target, ...options], root)).stdout,
-      ) as { template: string; created: string[]; nextSteps: string[] };
-      expect(dryRun.template).toBe('minimal');
-      expect(created.template).toBe('minimal');
+      ) as { stack: string; created: string[]; nextSteps: string[] };
+      expect(dryRun.stack).toBe('cloudflare-livekit');
+      expect(created.stack).toBe('cloudflare-livekit');
       expect(created.created).toEqual(dryRun.wouldCreate);
       expect(created.created).toEqual(await generatedFiles(target));
       expect(created.nextSteps.at(-1)).toBe(`${javascript} run dev`);
@@ -725,7 +721,7 @@ describe('built CLI', () => {
     }
   });
 
-  it('does not expose the internal registry as a new CLI flag', async () => {
+  it('rejects the removed --template option before creating files', async () => {
     const root = await createTemporaryDirectory();
     const result = await runSpawnedCli(
       ['--template', 'cloudflare-livekit', '--json'],
@@ -759,7 +755,7 @@ describe('built CLI', () => {
         code: 'TARGET_NOT_EMPTY',
       },
       ok: false,
-      schemaVersion: 3,
+      schemaVersion: 4,
     });
     const error = output.error as { path: unknown };
     expect(typeof error.path).toBe('string');
@@ -1224,13 +1220,7 @@ if [ "$1" = "--version" ]; then echo 1.0; exit 0; fi
     const root = await createTemporaryDirectory();
 
     const result = await runSpawnedCli(
-      [
-        '--interactive',
-        '--stack',
-        'cloudflare-livekit',
-        '--template',
-        'minimal',
-      ],
+      ['--interactive', '--stack', 'cloudflare-livekit'],
       root,
     );
 
@@ -1309,8 +1299,6 @@ if [ "$1" = "--version" ]; then echo 1.0; exit 0; fi
         '--no-setup',
         '--stack',
         'cloudflare-livekit',
-        '--template',
-        'minimal',
       ],
       root,
       '\n\n',
@@ -1331,13 +1319,7 @@ if [ "$1" = "--version" ]; then echo 1.0; exit 0; fi
     const fakePath = await createFakeManagerPath(root);
     const environment = { PATH: fakePath };
     const interactive = await runSpawnedCli(
-      [
-        '--interactive',
-        '--stack',
-        'cloudflare-livekit',
-        '--template',
-        'minimal',
-      ],
+      ['--interactive', '--stack', 'cloudflare-livekit'],
       root,
       'prompt-app\n\n\nn\n',
       environment,
@@ -1426,7 +1408,7 @@ if [ "$1" = "--version" ]; then echo 1.0; exit 0; fi
     expect(JSON.parse(result.stdout)).toMatchObject({
       error: { code: 'INSTALL_FAILED' },
       ok: false,
-      schemaVersion: 3,
+      schemaVersion: 4,
     });
     await expect(
       readFile(join(root, 'failed-install-app/README.md'), 'utf8'),

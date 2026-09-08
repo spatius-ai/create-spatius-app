@@ -49,6 +49,7 @@ try {
     'schemas/result-v1.schema.json',
     'schemas/result-v2.schema.json',
     'schemas/result-v3.schema.json',
+    'schemas/result-v4.schema.json',
   ]);
   const inventory = { javascript: [], python: [] };
   for (const template of Object.values(templateRegistry)) {

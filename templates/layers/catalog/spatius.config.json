@@ -1,1 +1,1 @@
-{ "version": 1, "stack": "cloudflare-livekit", "template": "minimal" }
+{ "version": 2, "stack": "cloudflare-livekit" }

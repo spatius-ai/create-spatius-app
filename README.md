@@ -4,14 +4,15 @@ Create a voice-avatar app with Spatius and React. Choose LiveKit with Cloudflare
 
 ## Quick start
 
-Requires Node.js 22.12+ and Python 3.11–3.14. You’ll also need a LiveKit Cloud
-project and a [Spatius Studio](https://app.spatius.ai) account.
+Requires Node.js 22.12+ and a [Spatius Studio](https://app.spatius.ai) account.
+LiveKit stacks also need Python 3.11–3.14 and a LiveKit Cloud project.
+The Agora stack needs an Agora account and no Python tooling.
 
 ```sh
 npx create-spatius-app my-app
 ```
 
-Choose a stack, then a template: minimal, tutoring, live streaming, customer service, or companion. Follow the remaining prompts to choose package managers, install dependencies, and
+Choose a tech stack. Follow the remaining prompts to choose package managers, install dependencies, and
 configure your provider and Spatius credentials.
 If LiveKit CLI is missing, setup offers to install it using Homebrew on macOS,
 WinGet on Windows, or LiveKit's Linux installer. You can also enter credentials
@@ -46,15 +47,15 @@ npx create-spatius-app setup . --interactive
 
 This configures local development only; it does not deploy your app.
 
-## Choose a stack and template
+## Choose a stack
 
 ```sh
-npx create-spatius-app my-tutor --stack railway-livekit --template tutoring
+npx create-spatius-app my-app --stack railway-livekit
 ```
 
 Cloudflare and Railway web hosting can each be paired with LiveKit Cloud Agents
-or a LiveKit agent on Railway. Defaults remain Cloudflare + LiveKit Cloud Agents
-with the minimal template. The `zeabur-agora` stack selects minimal automatically and requires no Python tooling.
+or a LiveKit agent on Railway. The default is Cloudflare + LiveKit Cloud Agents.
+The `zeabur-agora` stack requires no Python tooling.
 
 ## More options
 

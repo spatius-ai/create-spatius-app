@@ -59,7 +59,6 @@ function requireConfiguration(env: CloudflareBindings): void {
 export async function createSession(
   env: CloudflareBindings,
   randomUUID: () => string = () => crypto.randomUUID(),
-  scenarioMetadata?: Record<string, unknown>,
 ): Promise<SessionResponse> {
   requireConfiguration(env);
 
@@ -89,9 +88,6 @@ export async function createSession(
         metadata: serializeAgentDispatchMetadata(
           avatarId,
           env.CARTESIA_VOICE_ID,
-          scenarioMetadata
-            ? { ...scenarioMetadata, participant: participantIdentity }
-            : { participant: participantIdentity },
         ),
       }),
     ],

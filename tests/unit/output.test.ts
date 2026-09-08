@@ -1,7 +1,7 @@
 import Ajv2020 from 'ajv/dist/2020.js';
 import { describe, expect, it, vi } from 'vitest';
 
-import resultSchema from '../../schemas/result-v3.schema.json' with { type: 'json' };
+import resultSchema from '../../schemas/result-v4.schema.json' with { type: 'json' };
 import { CliError, EXIT_CODES } from '../../src/errors.js';
 import {
   createFailureResult,
@@ -27,14 +27,14 @@ function successOptions(dryRun: boolean, files: string[]) {
 }
 
 describe('structured output', () => {
-  it('takes next steps from the selected adapter while preserving the public template value', () => {
+  it('takes next steps from the selected adapter with stack-only public output', () => {
     const result = createSuccessResult({
       ...successOptions(false, ['file']),
       template: createFixtureTemplate(),
     });
     expect(result.nextSteps).toEqual(['fixture run']);
     expect(result.humanSteps).toEqual([]);
-    expect(result.template).toBe('minimal');
+    expect(result).not.toHaveProperty('template');
     expect(validateResult(result)).toBe(true);
   });
 
@@ -59,7 +59,7 @@ describe('structured output', () => {
       dryRun: false,
       ok: true,
       packageManagers: { javascript: 'pnpm', python: 'uv' },
-      schemaVersion: 3,
+      schemaVersion: 4,
       wouldCreate: [],
     });
   });
@@ -137,7 +137,7 @@ describe('structured output', () => {
         recovery: 'Choose an empty directory.',
       },
       ok: false,
-      schemaVersion: 3,
+      schemaVersion: 4,
     });
   });
 

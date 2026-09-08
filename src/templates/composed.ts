@@ -1,25 +1,21 @@
 import { agoraTemplate } from './agora.js';
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { stacks, type StackId, type ScenarioId } from '../catalog.js';
+import { stacks, type StackId } from '../catalog.js';
 import { cloudflareLivekitTemplate as base } from './cloudflare-livekit/index.js';
 import { javascriptRunCommand } from '../package-managers.js';
 import type { TemplateDefinition } from './types.js';
 
-export function composeTemplate(
-  stack: StackId,
-  scenario: ScenarioId,
-): TemplateDefinition {
+export function composeTemplate(stack: StackId): TemplateDefinition {
   if (stack === 'zeabur-agora') return agoraTemplate;
   const selected = stacks[stack];
   const node = selected.web === 'railway';
   return {
     ...base,
-    id: `${stack}/${scenario}`,
+    id: stack,
     stack,
-    scenario,
     requiresPython: true,
-    description: `${selected.label} — ${scenario}`,
+    description: selected.label,
     components: [
       '- web/       React + Spatius AvatarKit',
       `- ${node ? 'server/' : 'worker/'}    ${selected.web} API`,
@@ -27,14 +23,6 @@ export function composeTemplate(
     ],
     layers: [
       { directory: 'templates/layers/catalog' },
-      ...(scenario === 'companion'
-        ? [
-            {
-              directory: 'templates/layers/companion',
-              overrides: ['worker/memory.ts'],
-            },
-          ]
-        : []),
       ...(selected.agent === 'railway'
         ? [{ directory: 'templates/layers/railway-agent' }]
         : []),
@@ -48,14 +36,6 @@ export function composeTemplate(
                 'package-lock.json',
                 'pnpm-lock.yaml',
               ],
-            },
-          ]
-        : []),
-      ...(node && scenario === 'companion'
-        ? [
-            {
-              directory: 'templates/layers/companion-node',
-              overrides: ['package-lock.json', 'pnpm-lock.yaml'],
             },
           ]
         : []),
@@ -73,16 +53,7 @@ export function composeTemplate(
       await base.configure(directory, configuration);
       await writeFile(
         join(directory, 'spatius.config.json'),
-        JSON.stringify({ version: 1, stack, template: scenario }, null, 2) +
-          '\n',
-      );
-      const dataPath = join(directory, 'agent/src/scenario.json');
-      await writeFile(
-        dataPath,
-        (await readFile(dataPath, 'utf8')).replace(
-          '"scenario": "minimal"',
-          `"scenario": "${scenario}"`,
-        ),
+        JSON.stringify({ version: 2, stack }, null, 2) + '\n',
       );
       const packagePath = join(directory, 'package.json');
       const pkg = JSON.parse(await readFile(packagePath, 'utf8')) as {
@@ -114,8 +85,8 @@ export function composeTemplate(
               '"types": ["./worker-configuration.d.ts", "node"]',
             )
             .replace(
-              '"include": ["agent/src/scenario.json", "worker", "worker-configuration.d.ts"]',
-              '"include": [\n    "agent/src/scenario.json",\n    "worker",\n    "worker-configuration.d.ts",\n    "server"\n  ]',
+              '"include": ["worker", "worker-configuration.d.ts"]',
+              '"include": ["worker", "worker-configuration.d.ts", "server"]',
             ),
         );
         delete pkg.devDependencies['@cloudflare/vite-plugin'];
@@ -152,41 +123,6 @@ export function composeTemplate(
           'From agent/, run `lk cloud auth` and `lk agent create` for the first deployment. Configure the agent secrets from agent/.env.example. Use `lk agent deploy` for updates.\n';
       deployment +=
         '\nDeploy the agent before opening conversations. Use separate LiveKit projects for development and production. Local setup never uploads secrets.\n';
-      if (scenario === 'companion') {
-        deployment +=
-          '\n## Companion memory\n\nSet SPATIUS_API_ORIGIN in the agent service to your public web origin (http://localhost:5173 locally). The agent reaches memory over authenticated HTTP.\n';
-        if (node) {
-          const serverPath = join(directory, 'server/index.ts');
-          await writeFile(
-            serverPath,
-            (await readFile(serverPath, 'utf8'))
-              .replace(
-                'import { handleRequest }',
-                "import { database } from './database.js';\nimport { handleRequest }",
-              )
-              .replace(
-                'const env = process.env;',
-                'const env = { ...process.env, DB: database };',
-              ),
-          );
-          pkg.dependencies.pg = '8.16.3';
-          pkg.devDependencies['@types/pg'] = '8.15.5';
-          deployment +=
-            'Add a Postgres service, set DATABASE_URL on the web service, then apply migrations/0001_memory.sql with psql before deploying. For local development run `docker compose up -d`, set DATABASE_URL=postgres://spatius:spatius@localhost:5432/spatius in .env.local, and apply the same migration.\n';
-        } else {
-          deployment +=
-            'Create a D1 database with `wrangler d1 create spatius-memory`. Replace the database_id in wrangler.jsonc. Run `wrangler d1 migrations apply spatius-memory --local` for development and the same command with --remote before production deployment.\n';
-          const path = join(directory, 'wrangler.jsonc');
-          const contents = await readFile(path, 'utf8');
-          await writeFile(
-            path,
-            contents.replace(
-              '{',
-              '{\n  "d1_databases": [\n    {\n      "binding": "DB",\n      "database_name": "spatius-memory",\n      "database_id": "REPLACE_WITH_D1_ID",\n      "migrations_dir": "migrations",\n    },\n  ],',
-            ),
-          );
-        }
-      }
       await writeFile(join(directory, 'DEPLOYMENT.md'), deployment);
       await writeFile(packagePath, JSON.stringify(pkg, null, 2) + '\n');
     },

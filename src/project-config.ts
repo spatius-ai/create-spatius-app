@@ -1,11 +1,10 @@
 import { lstat, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { validateSelection, type ScenarioId, type StackId } from './catalog.js';
+import { validateSelection, type StackId } from './catalog.js';
 import { CliError, EXIT_CODES } from './errors.js';
 export interface ProjectConfig {
-  version: 1;
+  version: 2;
   stack: StackId;
-  template: ScenarioId;
 }
 export async function readProjectConfig(
   directory: string,
@@ -17,18 +16,28 @@ export async function readProjectConfig(
       throw new Error('Expected a regular file');
     const value: unknown = JSON.parse(await readFile(path, 'utf8'));
     if (
+      value &&
+      typeof value === 'object' &&
+      'version' in value &&
+      value.version !== 2
+    )
+      throw new CliError(
+        'INVALID_ARGUMENT',
+        'Unsupported spatius.config.json version. Expected version 2.',
+        { path, exitCode: EXIT_CODES.invalidArgument },
+      );
+    if (
       !value ||
       typeof value !== 'object' ||
       !('version' in value) ||
-      value.version !== 1 ||
+      value.version !== 2 ||
       !('stack' in value) ||
-      typeof value.stack !== 'string' ||
-      !('template' in value) ||
-      typeof value.template !== 'string'
+      typeof value.stack !== 'string'
     )
       throw new Error('Unsupported project configuration');
-    return { version: 1, ...validateSelection(value.stack, value.template) };
+    return { version: 2, ...validateSelection(value.stack) };
   } catch (error) {
+    if (error instanceof CliError) throw error;
     if (error instanceof Error && 'code' in error && error.code === 'ENOENT')
       return undefined;
     throw new CliError('INVALID_ARGUMENT', 'Invalid spatius.config.json.', {

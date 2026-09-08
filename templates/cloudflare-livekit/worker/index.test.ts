@@ -83,7 +83,6 @@ describe('createSession', () => {
         agentName: 'spatius-agent',
         metadata: JSON.stringify({
           avatar: { id: TEST_ENV.SPATIUS_AVATAR_ID },
-          context: { participant: 'web-participant-id' },
           version: 1,
         }),
       }),

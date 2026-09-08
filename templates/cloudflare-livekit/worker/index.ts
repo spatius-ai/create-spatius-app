@@ -1,4 +1,3 @@
-import { memoryRoute, memoryContext } from './memory.js';
 import { ConfigurationError, createSession, stopSession } from './session.js';
 
 const JSON_HEADERS = {
@@ -18,8 +17,6 @@ export async function handleRequest(
   env: CloudflareBindings,
 ): Promise<Response> {
   const url = new URL(request.url);
-  const memory = await memoryRoute(request, env);
-  if (memory) return memory;
 
   if (url.pathname === '/api/health') {
     if (request.method !== 'GET') {
@@ -47,13 +44,7 @@ export async function handleRequest(
     }
 
     try {
-      const context = await memoryContext(request, env);
-      const response = json(
-        await createSession(env, undefined, context.metadata),
-        201,
-      );
-      if (context.cookie) response.headers.set('set-cookie', context.cookie);
-      return response;
+      return json(await createSession(env), 201);
     } catch (error) {
       if (error instanceof ConfigurationError) {
         console.error(

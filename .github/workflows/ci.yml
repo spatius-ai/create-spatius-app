@@ -66,34 +66,18 @@ jobs:
           fail-on-severity: high
 
   template:
-    name: Template / ${{ matrix.template }}
+    name: Template / ${{ matrix.stack }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        template:
-          - zeabur-agora/minimal
-          - cloudflare-livekit/minimal
-          - cloudflare-livekit/tutoring
-          - cloudflare-livekit/live-streaming
-          - cloudflare-livekit/customer-service
-          - cloudflare-livekit/companion
-          - cloudflare-livekit-railway/minimal
-          - cloudflare-livekit-railway/tutoring
-          - cloudflare-livekit-railway/live-streaming
-          - cloudflare-livekit-railway/customer-service
-          - cloudflare-livekit-railway/companion
-          - railway-livekit-cloud/minimal
-          - railway-livekit-cloud/tutoring
-          - railway-livekit-cloud/live-streaming
-          - railway-livekit-cloud/customer-service
-          - railway-livekit-cloud/companion
-          - railway-livekit/minimal
-          - railway-livekit/tutoring
-          - railway-livekit/live-streaming
-          - railway-livekit/customer-service
-          - railway-livekit/companion
+        stack:
+          - cloudflare-livekit
+          - cloudflare-livekit-railway
+          - railway-livekit-cloud
+          - railway-livekit
+          - zeabur-agora
 
     steps:
       - name: Check out repository
@@ -117,7 +101,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Generate and verify application and browser interactions
-        run: pnpm build && node scripts/check-template.mjs --browser --template "${{ matrix.template }}"
+        run: pnpm build && node scripts/check-template.mjs --browser --stack "${{ matrix.stack }}"
 
       - name: Upload browser failure artifacts
         if: failure()

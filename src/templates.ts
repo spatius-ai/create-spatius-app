@@ -1,10 +1,9 @@
 import { readProjectConfig } from './project-config.js';
-import { stacks, availableScenarios, type StackId } from './catalog.js';
+import { stacks, type StackId } from './catalog.js';
 import { composeTemplate } from './templates/composed.js';
 import { fileURLToPath } from 'node:url';
 
 import { CliError, EXIT_CODES } from './errors.js';
-import { cloudflareLivekitTemplate } from './templates/cloudflare-livekit/index.js';
 import type { TemplateDefinition } from './templates/types.js';
 
 export type {
@@ -16,18 +15,15 @@ export type {
 export const DEFAULT_TEMPLATE_ID = 'cloudflare-livekit' as const;
 export const templateRegistry: Record<string, TemplateDefinition> =
   Object.fromEntries(
-    (Object.keys(stacks) as StackId[]).flatMap((stack) =>
-      availableScenarios(stack).map((scenario) => {
-        const template = composeTemplate(stack, scenario);
-        return [template.id, template];
-      }),
-    ),
+    (Object.keys(stacks) as StackId[]).map((stack) => [
+      stack,
+      composeTemplate(stack),
+    ]),
   );
 export type TemplateId = string;
 export function getTemplate(
   id: TemplateId = DEFAULT_TEMPLATE_ID,
 ): TemplateDefinition {
-  if (id === DEFAULT_TEMPLATE_ID) return cloudflareLivekitTemplate;
   const template = templateRegistry[id];
   if (!template)
     throw new CliError('INVALID_ARGUMENT', `Unknown template: ${id}`, {
@@ -46,10 +42,10 @@ export function resolveTemplateDirectory(
 
 export async function resolveProjectTemplate(
   targetDirectory: string,
-  templates: readonly TemplateDefinition[] = [cloudflareLivekitTemplate],
+  templates: readonly TemplateDefinition[] = [getTemplate()],
 ): Promise<TemplateDefinition> {
   const config = await readProjectConfig(targetDirectory);
-  if (config) return getTemplate(`${config.stack}/${config.template}`);
+  if (config) return getTemplate(config.stack);
   const matches: TemplateDefinition[] = [];
   for (const template of templates) {
     if (await template.setup.recognizes(targetDirectory))

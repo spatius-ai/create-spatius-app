@@ -19,5 +19,5 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["agent/src/scenario.json", "worker", "worker-configuration.d.ts"]
+  "include": ["worker", "worker-configuration.d.ts"]
 }

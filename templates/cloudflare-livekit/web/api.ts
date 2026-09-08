@@ -26,18 +26,12 @@ function isVoiceSession(value: unknown): value is VoiceSession {
 export async function requestVoiceSession(
   signal?: AbortSignal,
 ): Promise<VoiceSession> {
-  const character = globalThis.sessionStorage?.getItem('spatius-character');
-  const response = await fetch(
-    character
-      ? `/api/session?character=${encodeURIComponent(character)}`
-      : '/api/session',
-    {
-      signal,
-      cache: 'no-store',
-      headers: { accept: 'application/json' },
-      method: 'POST',
-    },
-  );
+  const response = await fetch('/api/session', {
+    signal,
+    cache: 'no-store',
+    headers: { accept: 'application/json' },
+    method: 'POST',
+  });
   const payload: unknown = await response.json().catch(() => undefined);
 
   if (!response.ok) {
