@@ -219,12 +219,17 @@ export async function readEvents(path) {
 
 export async function waitForEvents(path, predicate) {
   const deadline = Date.now() + 8000;
+  let events = [];
   while (Date.now() < deadline) {
-    const events = await readEvents(path);
+    events = await readEvents(path);
     if (predicate(events)) return events;
     await delay(25);
   }
-  assert.fail('Timed out waiting for fake processes to become ready.');
+  // Include progress without logging the fixture's environment or credentials.
+  const progress = events.map(({ role, type }) => `${role}:${type}`).join(', ');
+  assert.fail(
+    `Timed out waiting for fake processes to become ready. Events: ${progress || 'none'}`,
+  );
 }
 
 export async function assertStopped(pids) {

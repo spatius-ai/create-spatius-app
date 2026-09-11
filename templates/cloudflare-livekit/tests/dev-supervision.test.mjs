@@ -95,20 +95,24 @@ async function supervise(f, extraEnv) {
   return { child, done };
 }
 
-for (const [name, side, code] of [
+for (const [name, side, code, probe] of [
   ['web exits zero', 'web', '0'],
   ['web fails', 'web', '7'],
   ['agent exits zero', 'agent', '0'],
   ['agent fails', 'agent', '29'],
+  ['web exits zero after a timed-out CLI probe', 'web', '0', 'version-hang'],
 ]) {
   test(
     `root dev supervisor: ${name} stops its sibling and all grandchildren`,
     { timeout: 15000 },
     async (t) => {
-      const f = await fixture(t);
+      // Windows has only a preflight python.exe stub. Use the runnable uv shim
+      // so a slow CLI probe can fall back without exiting before registration.
+      const f = await fixture(t, { uv: windows || Boolean(probe) });
       const run = await supervise(f, {
         DEV_TEST_RUNTIME_HOLD: '1',
         DEV_TEST_GRANDCHILD: '1',
+        ...(probe ? { DEV_TEST_PROBE: probe } : {}),
         ...(side === 'web'
           ? { DEV_TEST_WEB_EXIT: code }
           : { DEV_TEST_EXIT_WHEN_RELEASED: '1', DEV_TEST_RUNTIME_EXIT: code }),
@@ -130,15 +134,14 @@ for (const [name, side, code] of [
       await assertStopped(events.map(({ pid }) => pid));
       // A bounded CLI probe may select Python fallback on a busy machine.
       // Supervision must launch exactly one runtime through either supported path.
-      assert.equal(
-        (await readEvents(f.events)).filter(
-          ({ role, args, type }) =>
-            ['lk', 'uv', 'python'].includes(role) &&
-            type === 'invoked' &&
-            args.includes('src/agent.py'),
-        ).length,
-        1,
+      const runtimes = (await readEvents(f.events)).filter(
+        ({ role, args, type }) =>
+          ['lk', 'uv', 'python'].includes(role) &&
+          type === 'invoked' &&
+          args.includes('src/agent.py'),
       );
+      assert.equal(runtimes.length, 1);
+      if (probe) assert.equal(runtimes[0].role, 'uv');
     },
   );
 }
@@ -152,7 +155,7 @@ test(
       'Node cannot send console Ctrl+C events on Windows; taskkill tree cleanup is tested separately.',
   },
   async (t) => {
-    const f = await fixture(t);
+    const f = await fixture(t, { uv: windows });
     const run = await supervise(f, {
       DEV_TEST_RUNTIME_HOLD: '1',
       DEV_TEST_GRANDCHILD: '1',
@@ -252,7 +255,7 @@ test(
   'agent failure before registration never starts web',
   { timeout: 15000 },
   async (t) => {
-    const f = await fixture(t);
+    const f = await fixture(t, { uv: windows });
     const run = await supervise(f, { DEV_TEST_RUNTIME_EXIT: '29' });
     const result = await run.done;
     assert.notEqual(result.code, 0);
@@ -265,7 +268,7 @@ test(
   'registration timeout stops the agent without starting web',
   { timeout: 15000 },
   async (t) => {
-    const f = await fixture(t);
+    const f = await fixture(t, { uv: windows });
     // Accelerate only the copied fixture's deadline; exercise the real web gate.
     const path = join(f.root, 'scripts', 'wait-for-agent.mjs');
     await writeFile(
@@ -290,7 +293,7 @@ test(
   'Ctrl+C while waiting for registration stops the agent without starting web',
   { timeout: 15000, skip: windows },
   async (t) => {
-    const f = await fixture(t);
+    const f = await fixture(t, { uv: windows });
     const run = await supervise(f, {
       DEV_TEST_RUNTIME_HOLD: '1',
       DEV_TEST_REGISTER: join(f.root, 'never-register'),
