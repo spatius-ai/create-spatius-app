@@ -6,11 +6,10 @@ license: MIT
 
 # Bootstrap a Spatius application
 
-Use the generator rather than assembling the template yourself. Choose a stack
-only. LiveKit stacks use React with Spatius avatars,
-Cloudflare or Railway web hosting, and a Python agent on LiveKit Cloud or Railway.
-LiveKit Cloud supplies RTC and inference in every LiveKit stack.
-The `zeabur-agora` stack uses Agora hosted Conversational
+Use the generator rather than assembling the template yourself. Choose LiveKit or Agora Conversational AI. Both use React with Spatius avatars
+and Cloudflare Workers for the frontend and API.
+LiveKit Cloud hosts the Python agent and supplies RTC and inference.
+The `cloudflare-agora` stack uses Agora hosted Conversational
 AI; it needs JavaScript tooling only. Omit Python flags for this stack.
 
 ## 1. Choose the invocation and destination

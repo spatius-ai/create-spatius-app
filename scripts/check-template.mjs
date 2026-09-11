@@ -1,5 +1,6 @@
 import { execFile } from 'node:child_process';
-import { mkdtemp, rm } from 'node:fs/promises';
+import assert from 'node:assert/strict';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -67,6 +68,8 @@ async function verify(template, variant) {
     targetDirectory: generatedProject,
     template,
   });
+  const typesPath = join(generatedProject, 'worker-configuration.d.ts');
+  await assert.rejects(readFile(typesPath), { code: 'ENOENT' });
   const steps = template.createInstallPlan(generatedProject, packageManagers);
   for (const step of steps) {
     const args = [...step.args];
@@ -75,6 +78,13 @@ async function verify(template, variant) {
     if (step.command === 'uv' && args[0] === 'sync') args.push('--locked');
     await run(step.command, args, step.cwd);
   }
+  // Installation creates editor types. Checks must also recover without that cache.
+  const types = await readFile(typesPath, 'utf8');
+  assert.match(types, /interface CloudflareBindings/);
+  assert.ok(
+    types.includes(variant.python ? 'LIVEKIT_API_KEY' : 'AGORA_APP_ID'),
+  );
+  await rm(typesPath);
   for (const script of variant.scripts) {
     await run(variant.javascript, ['run', script], generatedProject);
     if (

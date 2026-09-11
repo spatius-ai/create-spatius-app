@@ -40,6 +40,7 @@ export const cloudflareLivekitTemplate: TemplateDefinition = {
     '- agent/     Python LiveKit agent',
   ],
   includeFile(path, configuration) {
+    if (path === 'worker-configuration.d.ts') return false;
     const javascript = configuration?.packageManagers.javascript.name ?? 'pnpm';
     const python = configuration?.packageManagers.python?.name ?? 'uv';
     if (path === 'package-lock.json') return javascript === 'npm';

@@ -11,6 +11,8 @@ const env: AgoraEnvironment = {
   SPATIUS_API_KEY: 'private-key',
   SPATIUS_APP_ID: 'test-app',
   SPATIUS_AVATAR_ID: 'test-avatar',
+  SPATIUS_REGION: 'cn-beijing',
+  AGORA_AVATAR_SAMPLE_RATE: '24000',
 };
 describe('hosted Agora sessions', () => {
   it('keeps secrets server-side and authorizes idempotent cleanup', async () => {

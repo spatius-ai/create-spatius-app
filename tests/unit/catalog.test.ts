@@ -56,19 +56,32 @@ describe('stack catalog', () => {
     ).toEqual({ stack: 'cloudflare-livekit' });
     expect(choose).not.toHaveBeenCalled();
   });
-  it('asks only for the stack', async () => {
+  it('offers only the two voice AI providers', async () => {
     const messages: string[] = [];
     const result = await selectCatalog({
       interactive: true,
       prompts: {
-        choose: async (message, _options, initial) => {
+        choose: async (message, options, initial) => {
+          expect(options).toEqual([
+            { value: 'cloudflare-livekit', label: 'LiveKit' },
+            { value: 'cloudflare-agora', label: 'Agora Conversational AI' },
+          ]);
           messages.push(message);
           return initial;
         },
       },
     });
-    expect(messages).toEqual(['Which stack?']);
+    expect(messages).toEqual(['Which voice AI provider?']);
     expect(result.stack).toBe('cloudflare-livekit');
+  });
+  it.each([
+    'cloudflare-livekit-railway',
+    'railway-livekit-cloud',
+    'railway-livekit',
+    'zeabur-agora',
+  ])('rejects the removed %s stack', (stack) => {
+    expect(() => validateSelection(stack)).toThrow('Unsupported stack');
+    expect(() => getTemplate(stack)).toThrow('Unknown template');
   });
   it('rejects unknown selections', () => {
     expect(() => validateSelection('invalid')).toThrow('Unsupported');
@@ -77,11 +90,11 @@ describe('stack catalog', () => {
     const choose = vi.fn();
     expect(
       await selectCatalog({
-        stack: 'railway-livekit',
+        stack: 'cloudflare-agora',
         interactive: true,
         prompts: { choose },
       }),
-    ).toEqual({ stack: 'railway-livekit' });
+    ).toEqual({ stack: 'cloudflare-agora' });
     expect(choose).not.toHaveBeenCalled();
   });
   it.each(Object.keys(stacks))(
@@ -100,18 +113,23 @@ describe('stack catalog', () => {
         ),
       ).toEqual({ version: 2, stack });
       expect((await resolveProjectTemplate(directory)).id).toBe(template.id);
-      if (stack !== 'zeabur-agora') await assertSpatiusProject(directory);
-      const node = !stack.startsWith('cloudflare');
-      expect(result.files.includes('server/index.ts')).toBe(node);
-      expect(result.files.includes('wrangler.jsonc')).toBe(!node);
+      if (stack !== 'cloudflare-agora') await assertSpatiusProject(directory);
+      expect(result.files).not.toContain('server/index.ts');
+      expect(result.files).toContain('wrangler.jsonc');
+      expect(result.files).toContain('.dev.vars.example');
+      expect(result.files).not.toContain('worker-configuration.d.ts');
+      expect(result.files).not.toContain('Dockerfile');
+      expect(result.files.some((file) => file.startsWith('agent/'))).toBe(
+        stack === 'cloudflare-livekit',
+      );
       expect(
         result.files.some((file) =>
           /scenario|memory|database|migrations/.test(file),
         ),
       ).toBe(false);
       expect(result.files).toContain('DEPLOYMENT.md');
-      expect(result.files.includes('agent/railway.json')).toBe(
-        stack.endsWith('railway') || stack === 'railway-livekit',
+      expect(result.files.some((file) => /railway|zeabur/i.test(file))).toBe(
+        false,
       );
     },
   );

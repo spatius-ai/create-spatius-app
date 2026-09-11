@@ -18,17 +18,13 @@ export const runAgoraSetup: typeof runCredentialSetup = async ({
       { exitCode: EXIT_CODES.invalidArgument },
     );
   const config = await readProjectConfig(targetDirectory);
-  if (config?.stack !== 'zeabur-agora')
+  if (config?.stack !== 'cloudflare-agora')
     throw new CliError(
       'INVALID_ARGUMENT',
-      'Expected a Zeabur + Agora project.',
+      'Expected a Cloudflare + Agora project.',
       { exitCode: EXIT_CODES.invalidArgument },
     );
-  for (const name of [
-    'package.json',
-    '.env.local.example',
-    'worker/agora.ts',
-  ]) {
+  for (const name of ['package.json', '.dev.vars.example', 'worker/agora.ts']) {
     const stats = await lstat(join(targetDirectory, name));
     if (!stats.isFile() || stats.isSymbolicLink())
       throw new CliError(
@@ -37,7 +33,7 @@ export const runAgoraSetup: typeof runCredentialSetup = async ({
         { exitCode: EXIT_CODES.invalidArgument },
       );
   }
-  const path = join(targetDirectory, '.env.local');
+  const path = join(targetDirectory, '.dev.vars');
   let existing: string | undefined;
   try {
     const stats = await lstat(path);
@@ -46,7 +42,7 @@ export const runAgoraSetup: typeof runCredentialSetup = async ({
     existing = await readFile(path, 'utf8');
   } catch (error) {
     if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT'))
-      throw new CliError('FILESYSTEM_ERROR', 'Cannot safely read .env.local.', {
+      throw new CliError('FILESYSTEM_ERROR', 'Cannot safely read .dev.vars.', {
         exitCode: EXIT_CODES.filesystem,
         path,
       });
@@ -110,10 +106,10 @@ export const runAgoraSetup: typeof runCredentialSetup = async ({
   }
   const rendered = mergeDotenv(
     existing ??
-      (await readFile(join(targetDirectory, '.env.local.example'), 'utf8')),
+      (await readFile(join(targetDirectory, '.dev.vars.example'), 'utf8')),
     values,
   );
-  const temporary = join(targetDirectory, `.env.local.${randomUUID()}.tmp`);
+  const temporary = join(targetDirectory, `.dev.vars.${randomUUID()}.tmp`);
   try {
     await writeFile(temporary, rendered, { flag: 'wx', mode: 0o600 });
     await rename(temporary, path);
@@ -121,7 +117,7 @@ export const runAgoraSetup: typeof runCredentialSetup = async ({
     await rm(temporary, { force: true });
   }
   onStatus(
-    'Saved .env.local. Configure an English assistant in the published Agora pipeline, with its TTS sample rate matching AGORA_AVATAR_SAMPLE_RATE. No cloud services were started.',
+    'Saved .dev.vars. Configure an English assistant in the published Agora pipeline, with its TTS sample rate matching AGORA_AVATAR_SAMPLE_RATE. No cloud services were started.',
   );
   return 'configured';
 };

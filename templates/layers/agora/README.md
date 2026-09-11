@@ -1,6 +1,9 @@
-# Spatius voice assistant — Zeabur + Agora
+# Spatius voice assistant — Cloudflare + Agora
 
-A minimal React avatar conversation with an HTTP backend and Agora Conversational AI.
+A minimal React avatar conversation with a Cloudflare Worker API and Agora
+Conversational AI. The frontend and API deploy together on Cloudflare Workers;
+Agora hosts the conversational agent.
+
 Requires Node.js 22.12+, an Agora project with Conversational AI and RTM enabled,
 a published English assistant pipeline, and Spatius credentials. No Python is needed.
 
@@ -10,10 +13,13 @@ npx create-spatius-app setup . --interactive
 __DEV__
 ```
 
-Open the Vite URL, start a conversation, and speak or type. Microphone permission
-is optional: typed messages go to the model through Agora RTM. The transcript
-stays visible after disconnecting. Configure the assistant persona, speech
-recognition language, model, and voice in the published Agora pipeline. Match
-AGORA_AVATAR_SAMPLE_RATE to that pipeline's TTS output.
+Local setup saves credentials in `.dev.vars`. The Vite Cloudflare plugin runs
+both the frontend and Worker API locally. Open the printed URL, start a
+conversation, and speak or type. Microphone permission is optional: typed
+messages use Agora RTM. The transcript stays visible after disconnecting.
 
-See DEPLOYMENT.md to deploy the frontend and API together to Zeabur.
+Configure the assistant persona, speech recognition language, model, and voice
+in the published Agora pipeline. Match `AGORA_AVATAR_SAMPLE_RATE` to its TTS output.
+
+Run `__CHECK__` to verify the application. See [DEPLOYMENT.md](DEPLOYMENT.md)
+to deploy the frontend and API together to Cloudflare Workers.

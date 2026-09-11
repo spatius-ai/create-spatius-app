@@ -22,6 +22,8 @@ Run from the project root:
 
 All checks can run after dependency installation, before credential setup.
 Browser tests require Chromium; see README.md for the installation command.
+Wrangler generates the ignored `worker-configuration.d.ts` during installation
+and before lint, type checking, and builds. Update `wrangler.jsonc` to change bindings.
 
 ## Working guidelines
 

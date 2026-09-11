@@ -1,7 +1,7 @@
 {
   "name": "create-spatius-app",
   "version": "0.1.0-beta.0",
-  "description": "Create a Spatius voice-avatar app with LiveKit or Agora and your choice of hosting.",
+  "description": "Create a Spatius voice-avatar app with LiveKit or Agora Conversational AI on Cloudflare Workers.",
   "type": "module",
   "bin": {
     "create-spatius-app": "./dist/cli.js"

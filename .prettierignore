@@ -7,4 +7,4 @@ templates/*/agent/.venv/
 templates/*/dist/
 templates/*/node_modules/
 templates/*/pnpm-lock.yaml
-templates/*/worker-configuration.d.ts
+templates/**/worker-configuration.d.ts

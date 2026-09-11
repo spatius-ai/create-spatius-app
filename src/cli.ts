@@ -618,9 +618,10 @@ async function runSetupCommand(
 function addCreateOptions(command: Command): Command {
   return command
     .addOption(
-      new Option('--stack <stack>', 'application and deployment stack').choices(
-        Object.keys(stacks),
-      ),
+      new Option(
+        '--stack <stack>',
+        'voice provider on Cloudflare Workers',
+      ).choices(Object.keys(stacks)),
     )
     .option('-y, --yes', 'accept safe defaults without prompting')
     .addOption(new Option('--interactive', 'force interactive prompts'))
@@ -637,7 +638,7 @@ function addCreateOptions(command: Command): Command {
         'use uv or pip for Python dependencies',
       ).choices(PYTHON_PACKAGE_MANAGERS),
     )
-    .option('--install', 'install JavaScript and Python dependencies')
+    .option('--install', 'install dependencies for the selected provider')
     .option('--no-install', 'skip dependency installation')
     .option('--setup', 'configure local provider and Spatius credentials')
     .option('--no-setup', 'skip credential setup')
@@ -651,7 +652,9 @@ async function main(): Promise<void> {
   const program = addCreateOptions(
     new Command()
       .name('create-spatius-app')
-      .description(getTemplate().description)
+      .description(
+        'Create a Spatius voice-avatar app with LiveKit or Agora Conversational AI on Cloudflare Workers.',
+      )
       .version(version)
       .argument(
         '[project-directory]',
@@ -665,6 +668,7 @@ async function main(): Promise<void> {
       `
 Examples:
   npx create-spatius-app my-app
+  npx create-spatius-app my-app --stack cloudflare-agora
   npx create-spatius-app my-app --package-manager pnpm --python-package-manager uv
   npx create-spatius-app my-app --no-setup
   npx create-spatius-app my-app --setup --interactive

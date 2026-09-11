@@ -176,7 +176,6 @@ async function expectGeneratedTree(target: string): Promise<void> {
       'vitest.config.ts',
       'web',
       'worker',
-      'worker-configuration.d.ts',
       'wrangler.jsonc',
     ]),
   );
@@ -458,7 +457,7 @@ describe('built CLI', () => {
       [
         'agora-app',
         '--stack',
-        'zeabur-agora',
+        'cloudflare-agora',
         '--package-manager',
         'npm',
         '--no-install',
@@ -470,15 +469,17 @@ describe('built CLI', () => {
     const result: unknown = JSON.parse(stdout);
     expect(result).toMatchObject({
       ok: true,
-      stack: 'zeabur-agora',
+      stack: 'cloudflare-agora',
       humanSteps: [{ requiresHuman: true, requiresTty: true }],
       packageManagers: { javascript: 'npm' },
     });
     expect(stdout).not.toContain('"python"');
     const files = await readdir(join(directory, 'agora-app'));
-    expect(files).toContain('Dockerfile');
+    expect(files).toContain('wrangler.jsonc');
+    expect(files).toContain('.dev.vars.example');
     expect(files).not.toContain('agent');
-    expect(files).not.toContain('wrangler.jsonc');
+    expect(files).not.toContain('Dockerfile');
+    expect(files).not.toContain('server');
   });
 
   it.each(['pnpm', 'npm', 'bun'])(

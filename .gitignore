@@ -8,6 +8,7 @@ coverage/
 test-results/
 playwright-report/
 .wrangler/
+worker-configuration.d.ts
 .venv/
 .ruff_cache/
 __pycache__/

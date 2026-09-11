@@ -55,8 +55,8 @@ describe('template registry', () => {
     ).toEqual(['bun run dev']);
   });
 
-  it('selects the only registered default without introducing a CLI selector', () => {
-    expect(Object.keys(templateRegistry)).toHaveLength(5);
+  it('selects LiveKit by default from the two provider templates', () => {
+    expect(Object.keys(templateRegistry)).toHaveLength(2);
     expect(getTemplate()).toBe(getTemplate(DEFAULT_TEMPLATE_ID));
     expect(getTemplate().id).toBe(DEFAULT_TEMPLATE_ID);
     expect(getTemplate().components).toHaveLength(3);

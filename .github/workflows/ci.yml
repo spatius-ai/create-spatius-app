@@ -74,10 +74,7 @@ jobs:
       matrix:
         stack:
           - cloudflare-livekit
-          - cloudflare-livekit-railway
-          - railway-livekit-cloud
-          - railway-livekit
-          - zeabur-agora
+          - cloudflare-agora
 
     steps:
       - name: Check out repository
@@ -93,7 +90,7 @@ jobs:
           cache: pnpm
 
       - name: Set up uv
-        if: matrix.stack != 'zeabur-agora'
+        if: matrix.stack == 'cloudflare-livekit'
         uses: astral-sh/setup-uv@v10.0.1
         with:
           python-version: '3.13'
