@@ -176,7 +176,6 @@ async function expectGeneratedTree(target: string): Promise<void> {
       'vitest.config.ts',
       'web',
       'worker',
-      'worker-configuration.d.ts',
       'wrangler.jsonc',
     ]),
   );

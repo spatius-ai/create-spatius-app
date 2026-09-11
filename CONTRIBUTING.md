@@ -104,6 +104,10 @@ Add catalog matrix coverage when adding a stack. JSON consumers use
 Generated deployment and customization instructions belong in the generated
 project, not the repository README.
 
+Cloudflare type declarations are generated from each application's `wrangler.jsonc`
+during installation and before lint, type checking, and builds. Do not check in
+`worker-configuration.d.ts` or add generated runtime declarations to template layers.
+
 The `cloudflare-agora` adapter reuses the shared presentation and Cloudflare configuration,
 but owns its hosted-agent API, browser session lifecycle, and local credential setup.
 Its verification variants omit Python; the CLI must not probe or prompt for Python

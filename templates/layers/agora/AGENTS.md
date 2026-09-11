@@ -7,6 +7,7 @@ Browser audio uses Agora RTC, and text input and transcripts use the official
 Agora client toolkit. Spatius renders the avatar locally.
 
 Keep secrets in `.dev.vars` locally and Cloudflare Worker secrets in production.
-Use `wrangler types --strict-vars=false --env-interface CloudflareBindings`
-after changing bindings. Preserve session cleanup on disconnect and failed startup.
+Wrangler generates the ignored `worker-configuration.d.ts` during installation
+and before lint, type checking, and builds. Update `wrangler.jsonc` to change bindings.
+Preserve session cleanup on disconnect and failed startup.
 Use mocks for provider calls in tests. See DEPLOYMENT.md for Cloudflare setup.

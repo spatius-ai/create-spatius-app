@@ -6,21 +6,22 @@
   "scripts": {
     "agent:check": "node scripts/run-agent-python.mjs -m src.agent --help && node scripts/run-agent-python.mjs -m unittest discover -s tests && node scripts/run-agent-python.mjs -m ruff check . && node scripts/run-agent-python.mjs -m ruff format --check .",
     "agent:dev": "node scripts/dev-agent.mjs",
-    "build": "tsc -b && vite build",
-    "cf-typegen": "wrangler types --env-interface CloudflareBindings",
+    "build": "wrangler types --strict-vars=false --env-interface CloudflareBindings && tsc -b && vite build",
+    "cf-typegen": "wrangler types --strict-vars=false --env-interface CloudflareBindings",
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm test:dev && pnpm build",
     "deploy": "pnpm build && wrangler deploy",
     "dev": "node scripts/dev.mjs \"pnpm run dev:web\" \"pnpm run agent:dev\"",
     "dev:web": "node scripts/dev-web.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "lint": "eslint .",
+    "lint": "wrangler types --strict-vars=false --env-interface CloudflareBindings && eslint .",
     "preview": "vite preview",
     "test": "vitest run",
     "test:dev": "node --test tests/dev*.test.mjs",
     "test:e2e": "playwright test",
-    "typecheck": "tsc -b --pretty false",
-    "wrangler": "wrangler"
+    "typecheck": "wrangler types --strict-vars=false --env-interface CloudflareBindings && tsc -b --pretty false",
+    "wrangler": "wrangler",
+    "postinstall": "wrangler types --strict-vars=false --env-interface CloudflareBindings"
   },
   "engines": {
     "node": ">=22.12"

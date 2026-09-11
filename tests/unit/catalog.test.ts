@@ -117,6 +117,7 @@ describe('stack catalog', () => {
       expect(result.files).not.toContain('server/index.ts');
       expect(result.files).toContain('wrangler.jsonc');
       expect(result.files).toContain('.dev.vars.example');
+      expect(result.files).not.toContain('worker-configuration.d.ts');
       expect(result.files).not.toContain('Dockerfile');
       expect(result.files.some((file) => file.startsWith('agent/'))).toBe(
         stack === 'cloudflare-livekit',
