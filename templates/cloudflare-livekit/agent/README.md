@@ -90,4 +90,6 @@ Use `lk agent deploy` for later releases. Keep `livekit.toml` local until you
 have reviewed the project-specific values it contains.
 
 The Docker image runs as a non-root user and downloads model support files at
-build time so startup does not need to fetch them.
+build time so startup does not need to fetch them. It also installs the native
+Opus library required for Spatius audio forwarding and checks that the Python
+binding can load it during the build.
