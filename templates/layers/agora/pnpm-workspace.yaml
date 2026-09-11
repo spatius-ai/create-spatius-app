@@ -1,0 +1,8 @@
+allowBuilds:
+  core-js: true
+  esbuild: true
+  workerd: true
+autoInstallPeers: false
+preferFrozenLockfile: true
+saveExact: true
+strictPeerDependencies: true
