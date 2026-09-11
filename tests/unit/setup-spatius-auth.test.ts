@@ -106,7 +106,7 @@ describe('Spatius loopback callback server', () => {
     expect(response.headers.get('referrer-policy')).toBe('no-referrer');
     expect(response.headers.get('cache-control')).toBe('no-store');
     expect(response.headers.get('content-security-policy')).toBe(
-      "default-src 'none'; style-src 'unsafe-inline'",
+      "default-src 'none'; style-src 'unsafe-inline'; font-src data:",
     );
     await expect(waiting).resolves.toEqual({
       authCode: 'code',
