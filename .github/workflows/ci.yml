@@ -93,6 +93,7 @@ jobs:
           cache: pnpm
 
       - name: Set up uv
+        if: matrix.stack != 'zeabur-agora'
         uses: astral-sh/setup-uv@v10.0.1
         with:
           python-version: '3.13'
