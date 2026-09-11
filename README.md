@@ -7,6 +7,7 @@ Create a voice-avatar app with Spatius and React. Choose LiveKit or Agora Conver
 Requires Node.js 22.12+ and a [Spatius Studio](https://app.spatius.ai) account.
 The LiveKit template also needs Python 3.11–3.14 and a LiveKit Cloud project.
 The Agora template needs an Agora account and no Python tooling.
+For clean Ctrl+C shutdown with pnpm, use version 12.4.1 or later for both the installed launcher and the project pin.
 
 ```sh
 npx create-spatius-app my-app
