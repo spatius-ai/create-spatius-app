@@ -54,6 +54,16 @@ This starts the Python agent first, then starts the frontend and Cloudflare
 Worker once the agent has registered with LiveKit. If registration takes more
 than 60 seconds, startup stops with an error.
 
+Press Ctrl+C once to stop both services. If shutdown logs cover the shell prompt
+and it looks as though another Ctrl+C is required, use pnpm 12.4.1 or later for
+both the executable on your PATH and the `packageManager` pin in `package.json`.
+An older launcher or project pin can return to the shell before the services
+finish shutting down; [pnpm 12.4.1 fixes signal forwarding and waiting](https://github.com/pnpm/pnpm/releases/tag/v12.4.1).
+For a Homebrew installation, run `brew update` followed by `brew upgrade pnpm`.
+Set `packageManager` to `pnpm@12.4.1`, then run `pnpm install` to refresh the
+package-manager lock entry. Changing only the project pin leaves an older
+launcher in use; upgrading only the launcher leaves an older project pin active.
+
 ## Validate without credentials
 
 After installing both dependency sets, you can run these checks before account

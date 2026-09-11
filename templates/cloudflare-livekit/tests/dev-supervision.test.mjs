@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { delimiter, dirname, join } from 'node:path';
@@ -27,7 +28,7 @@ const concurrentlyBin = join(
   require(concurrentlyPackage).bin.concurrently,
 );
 
-async function supervise(f, extraEnv) {
+async function supervise(f, extraEnv, manager = 'npm', executable = manager) {
   const viteBin = join(f.root, 'node_modules', 'vite', 'bin');
   await mkdir(viteBin, { recursive: true });
   await writeFile(
@@ -37,13 +38,24 @@ async function supervise(f, extraEnv) {
   const sourcePackage = JSON.parse(
     await readFile(join(templateDirectory, 'package.json'), 'utf8'),
   );
-  // Exercise the production startup gate and supervisor with npm, available alongside
-  // Node in both generated projects and root CI. Only PM selection changes.
+  // npm is available alongside Node. The pnpm regression also exercises the
+  // package manager running this suite, without downloading another version.
   const scripts = Object.fromEntries(
     ['dev', 'dev:web', 'agent:dev'].map((name) => [
       name,
-      sourcePackage.scripts[name].replaceAll('pnpm run ', 'npm run '),
+      sourcePackage.scripts[name].replaceAll('pnpm run ', `${manager} run `),
     ]),
+  );
+  // Observe completed production cleanup independently of pipe closure. A package
+  // manager can exit early while descendants still hold its output pipes open.
+  const finished = join(f.root, 'dev-finished');
+  await writeFile(
+    join(f.root, 'scripts', 'dev-finished.mjs'),
+    `import { writeFileSync } from 'node:fs'; await import('./dev.mjs'); writeFileSync(${JSON.stringify(finished)}, '');`,
+  );
+  scripts.dev = scripts.dev.replace(
+    'scripts/dev.mjs',
+    'scripts/dev-finished.mjs',
   );
   await writeFile(
     join(f.root, 'package.json'),
@@ -72,7 +84,7 @@ async function supervise(f, extraEnv) {
   );
   const env = { ...f.env, ...extraEnv };
   env.PATH += `${delimiter}${process.env.PATH ?? process.env.Path ?? ''}`;
-  const spec = commandSpec('npm', ['run', 'dev'], env);
+  const spec = commandSpec(executable, ['run', 'dev'], env);
   const child = spawn(spec.command, spec.arguments_, {
     cwd: f.root,
     env,
@@ -92,7 +104,10 @@ async function supervise(f, extraEnv) {
     child.once('error', reject);
     child.once('close', (code, signal) => resolve({ code, signal, output }));
   });
-  return { child, done };
+  const exited = new Promise((resolve) => {
+    child.once('exit', () => resolve({ finished: existsSync(finished) }));
+  });
+  return { child, done, exited };
 }
 
 for (const [name, side, code, probe] of [
@@ -178,6 +193,50 @@ test(
       result.signal === 'SIGINT' || result.code !== null,
       result.output,
     );
+    assertNoCredentials(result.output);
+    await assertStopped(events.map(({ pid }) => pid));
+  },
+);
+
+// Generated npm/bun projects need not install pnpm just to run their checks.
+// Root CI and generated pnpm checks supply the exact invoking pnpm executable.
+const pnpmExecutable = process.env.npm_execpath;
+test(
+  'pnpm waits for dev cleanup before exiting after one Ctrl+C',
+  {
+    timeout: 15000,
+    skip:
+      windows ||
+      !pnpmExecutable ||
+      !/pnpm(?:\.[cm]?js)?$/i.test(pnpmExecutable),
+  },
+  async (t) => {
+    const f = await fixture(t);
+    const run = await supervise(
+      f,
+      {
+        DEV_TEST_RUNTIME_HOLD: '1',
+        DEV_TEST_GRANDCHILD: '1',
+        DEV_TEST_DETACHED: '1',
+      },
+      'pnpm',
+      pnpmExecutable,
+    );
+    const events = await waitForEvents(
+      f.events,
+      (events) =>
+        events.filter(
+          ({ role, type }) => role === 'grandchild' && type === 'ready',
+        ).length === 2,
+    );
+    await delay(250);
+    process.kill(-run.child.pid, 'SIGINT');
+    assert.equal(
+      (await run.exited).finished,
+      true,
+      'pnpm returned before dev cleanup finished; use a pnpm launcher >=12.4.1 when using pnpm 12.',
+    );
+    const result = await run.done;
     assertNoCredentials(result.output);
     await assertStopped(events.map(({ pid }) => pid));
   },
