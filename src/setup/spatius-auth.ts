@@ -129,7 +129,7 @@ export async function createLoopbackCallbackServer(): Promise<SpatiusCallbackSer
         .writeHead(200, {
           'Cache-Control': 'no-store',
           'Content-Security-Policy':
-            "default-src 'none'; style-src 'unsafe-inline'",
+            "default-src 'none'; style-src 'unsafe-inline'; font-src data:",
           'Content-Type': 'text/html; charset=utf-8',
           'Referrer-Policy': 'no-referrer',
         })
