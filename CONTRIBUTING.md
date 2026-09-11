@@ -73,6 +73,12 @@ To add a future internal entry:
 The `pnpm template:test:e2e` command builds the CLI and runs Chromium
 tests after the pnpm/uv JavaScript checks for LiveKit stacks.
 CI runs each of the two provider templates as a separate job.
+Template verification packs and installs the bootstrap in a temporary directory,
+generates each application through its public CLI, and checks the generated
+project using `npm ci` or `pnpm install --frozen-lockfile`. Installation must not
+repair its JavaScript lockfile. Keep each source manifest, lockfile, and
+`pnpm-workspace.yaml` together so dependency updates run in the same workspace
+that users receive. A layer replacing these files must declare its overrides.
 To verify one entry locally, run `pnpm build` followed by
 `node scripts/check-template.mjs --browser --stack cloudflare-livekit`. It installs Chromium
 (including system dependencies on Linux), retains output under
