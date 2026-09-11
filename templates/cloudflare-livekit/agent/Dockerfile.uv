@@ -19,11 +19,19 @@ FROM python:${PYTHON_VERSION}-slim-bookworm
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1
 
+# Spatius encodes outgoing avatar audio with the native Opus library.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libopus0 \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN useradd --create-home --uid 10001 appuser
 WORKDIR /app
 
 COPY --from=builder --chown=appuser:appuser /app /app
 
 USER appuser
+
+# Fail the build if the runtime cannot load the native audio encoder.
+RUN python -c "import opuslib_next"
 
 CMD ["python", "-m", "src.agent", "start"]
