@@ -81,6 +81,7 @@ export const agoraTemplate: TemplateDefinition = {
         'package.json',
         'package-lock.json',
         'pnpm-lock.yaml',
+        'pnpm-workspace.yaml',
         'web/App.tsx',
         'worker/index.ts',
         'worker/index.test.ts',
