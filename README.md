@@ -1,18 +1,18 @@
 # create-spatius-app
 
-Create a voice-avatar app with Spatius and React. Choose LiveKit with Cloudflare or Railway hosting, or Agora Conversational AI on Zeabur.
+Create a voice-avatar app with Spatius and React. Choose LiveKit or Agora Conversational AI. Both templates run the frontend and API on Cloudflare Workers.
 
 ## Quick start
 
 Requires Node.js 22.12+ and a [Spatius Studio](https://app.spatius.ai) account.
-LiveKit stacks also need Python 3.11–3.14 and a LiveKit Cloud project.
-The Agora stack needs an Agora account and no Python tooling.
+The LiveKit template also needs Python 3.11–3.14 and a LiveKit Cloud project.
+The Agora template needs an Agora account and no Python tooling.
 
 ```sh
 npx create-spatius-app my-app
 ```
 
-Choose a tech stack. Follow the remaining prompts to choose package managers, install dependencies, and
+Choose LiveKit or Agora Conversational AI. Follow the remaining prompts to choose package managers, install dependencies, and
 configure your provider and Spatius credentials.
 If LiveKit CLI is missing, setup offers to install it using Homebrew on macOS,
 WinGet on Windows, or LiveKit's Linux installer. You can also enter credentials
@@ -26,7 +26,7 @@ pnpm dev
 # Or: npm run dev / bun run dev
 ```
 
-This starts the frontend, API, and, for LiveKit stacks, the Python agent together. Generated DEPLOYMENT.md covers your selected hosting stack.
+This starts the frontend, API, and, for LiveKit, the Python agent together. Generated DEPLOYMENT.md covers deployment to Cloudflare Workers and, for LiveKit, LiveKit Cloud.
 Open the URL printed in your terminal and start a conversation.
 
 ## Use with a coding agent
@@ -47,15 +47,16 @@ npx create-spatius-app setup . --interactive
 
 This configures local development only; it does not deploy your app.
 
-## Choose a stack
+## Choose a provider
 
 ```sh
-npx create-spatius-app my-app --stack railway-livekit
+npx create-spatius-app my-app --stack cloudflare-livekit
+# Or:
+npx create-spatius-app my-app --stack cloudflare-agora
 ```
 
-Cloudflare and Railway web hosting can each be paired with LiveKit Cloud Agents
-or a LiveKit agent on Railway. The default is Cloudflare + LiveKit Cloud Agents.
-The `zeabur-agora` stack requires no Python tooling.
+LiveKit is the default and deploys its Python agent to LiveKit Cloud.
+Agora Conversational AI hosts the agent itself; its template needs no Python.
 
 ## More options
 

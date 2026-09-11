@@ -1,0 +1,24 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "spatius-agora-app",
+  "main": "./worker/index.ts",
+  "compatibility_date": "2026-09-11",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "AGORA_APP_ID": "your-agora-app-id",
+    "AGORA_PIPELINE_ID": "your-published-pipeline-id",
+    "SPATIUS_APP_ID": "your-spatius-app-id",
+    "SPATIUS_AVATAR_ID": "your-spatius-avatar-id",
+    "SPATIUS_REGION": "cn-beijing",
+    "AGORA_AVATAR_SAMPLE_RATE": "24000",
+  },
+  "secrets": {
+    "required": ["AGORA_APP_CERTIFICATE", "SPATIUS_API_KEY"],
+  },
+  "assets": {
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"],
+  },
+  "observability": { "enabled": true, "head_sampling_rate": 1 },
+  "upload_source_maps": true,
+}

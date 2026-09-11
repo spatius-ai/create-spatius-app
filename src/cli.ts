@@ -618,9 +618,10 @@ async function runSetupCommand(
 function addCreateOptions(command: Command): Command {
   return command
     .addOption(
-      new Option('--stack <stack>', 'application and deployment stack').choices(
-        Object.keys(stacks),
-      ),
+      new Option(
+        '--stack <stack>',
+        'voice provider on Cloudflare Workers',
+      ).choices(Object.keys(stacks)),
     )
     .option('-y, --yes', 'accept safe defaults without prompting')
     .addOption(new Option('--interactive', 'force interactive prompts'))

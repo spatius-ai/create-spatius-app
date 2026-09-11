@@ -10,6 +10,7 @@ import { cloudflareLivekitTemplate as base } from './cloudflare-livekit/index.js
 import { runAgoraSetup } from '../setup/agora.js';
 import { readProjectConfig } from '../project-config.js';
 import type { TemplateDefinition } from './types.js';
+
 const files = new Set([
   'package.json',
   'package-lock.json',
@@ -17,8 +18,6 @@ const files = new Set([
   'pnpm-workspace.yaml',
   'npmrc',
   'gitignore',
-  'dockerignore',
-  'Dockerfile',
   '.editorconfig',
   '.prettierrc.json',
   '.prettierignore',
@@ -28,12 +27,18 @@ const files = new Set([
   'spatius.config.json',
   'index.html',
   'tsconfig.json',
+  'tsconfig.web.json',
+  'tsconfig.worker.json',
+  'tsconfig.node.json',
   'vite.config.ts',
   'vitest.config.ts',
   'eslint.config.mjs',
-  'env.example',
-  'server/index.ts',
+  'dev.vars.example',
+  'wrangler.jsonc',
+  'scripts/check-worker.mjs',
+  'worker-configuration.d.ts',
   'worker/index.ts',
+  'worker/index.test.ts',
   'worker/agora.ts',
   'worker/agora.test.ts',
   'worker/capability.ts',
@@ -51,8 +56,8 @@ const files = new Set([
   'web/components/agents-ui/PROVENANCE.md',
 ]);
 export const agoraTemplate: TemplateDefinition = {
-  id: 'zeabur-agora',
-  stack: 'zeabur-agora',
+  id: 'cloudflare-agora',
+  stack: 'cloudflare-agora',
   requiresPython: false,
   humanSteps: [
     {
@@ -64,17 +69,13 @@ export const agoraTemplate: TemplateDefinition = {
     },
   ],
   directory: 'templates/cloudflare-livekit',
-  description: 'Zeabur + Agora Conversational AI',
+  description: 'Cloudflare Workers + Agora Conversational AI',
   components: [
     '- web/       React + Spatius AvatarKit + Agora',
-    '- server/    Node HTTP API; Agora hosts the conversational agent',
+    '- worker/    Cloudflare API; Agora hosts the conversational agent',
   ],
   layers: [
     { directory: 'templates/layers/catalog' },
-    {
-      directory: 'templates/layers/node',
-      overrides: ['vite.config.ts', 'package-lock.json', 'pnpm-lock.yaml'],
-    },
     {
       directory: 'templates/layers/agora',
       overrides: [
@@ -83,7 +84,11 @@ export const agoraTemplate: TemplateDefinition = {
         'pnpm-lock.yaml',
         'web/App.tsx',
         'worker/index.ts',
-        'tsconfig.json',
+        'worker/index.test.ts',
+        'worker-configuration.d.ts',
+        'tsconfig.worker.json',
+        '.dev.vars.example',
+        'wrangler.jsonc',
         'vitest.config.ts',
         'README.md',
         'AGENTS.md',
@@ -100,7 +105,7 @@ export const agoraTemplate: TemplateDefinition = {
     );
   },
   mapFile(path) {
-    return path === 'env.example' ? '.env.local.example' : base.mapFile(path);
+    return base.mapFile(path);
   },
   async configure(directory, configuration) {
     const manager = configuration.packageManagers.javascript;
@@ -111,16 +116,32 @@ export const agoraTemplate: TemplateDefinition = {
       packageManager?: string;
       scripts: Record<string, string>;
       trustedDependencies?: string[];
+      allowScripts?: Record<string, boolean>;
     };
     pkg.name = toValidPackageName(
       configuration.projectName ?? basename(directory),
     );
     if (manager.version && manager.version !== 'unknown')
       pkg.packageManager = `${manager.name}@${manager.version}`;
-    pkg.scripts.check = ['format:check', 'lint', 'typecheck', 'test', 'build']
+    else delete pkg.packageManager;
+    pkg.scripts.check = [
+      'format:check',
+      'lint',
+      'typecheck',
+      'test',
+      'build',
+      'test:worker',
+    ]
       .map(run)
       .join(' && ');
-    if (manager.name === 'bun') pkg.trustedDependencies = ['esbuild'];
+    pkg.scripts.deploy = `${run('build')} && wrangler deploy`;
+    if (manager.name === 'bun')
+      pkg.trustedDependencies = ['core-js', 'esbuild', 'workerd'];
+    else if (
+      manager.name === 'npm' &&
+      Number.parseInt(manager.version ?? '', 10) >= 12
+    )
+      pkg.allowScripts = { 'core-js': true, esbuild: true, workerd: true };
     await writeFile(path, JSON.stringify(pkg, null, 2) + '\n');
     if (manager.name === 'npm') {
       const lockPath = join(directory, 'package-lock.json');
@@ -134,33 +155,7 @@ export const agoraTemplate: TemplateDefinition = {
     }
     await writeFile(
       join(directory, 'spatius.config.json'),
-      JSON.stringify({ version: 2, stack: 'zeabur-agora' }, null, 2) + '\n',
-    );
-    const serverPath = join(directory, 'server/index.ts');
-    await writeFile(
-      serverPath,
-      (await readFile(serverPath, 'utf8'))
-        .replace(
-          'import { handleRequest }',
-          "import type { AgoraEnvironment } from '../worker/agora.js';\nimport { handleRequest }",
-        )
-        .replace(
-          'const env = process.env;',
-          'const env = process.env as unknown as AgoraEnvironment;',
-        ),
-    );
-    const dockerPath = join(directory, 'Dockerfile');
-    const install =
-      manager.name === 'pnpm'
-        ? 'npm install --global pnpm@12.3.4 && pnpm install --frozen-lockfile'
-        : manager.name === 'bun'
-          ? 'npm install --global bun && bun install'
-          : 'npm ci';
-    await writeFile(
-      dockerPath,
-      (await readFile(dockerPath, 'utf8'))
-        .replace('__SPATIUS_CONTAINER_INSTALL__', install)
-        .replace('__SPATIUS_CONTAINER_BUILD__', run('build')),
+      JSON.stringify({ version: 2, stack: 'cloudflare-agora' }, null, 2) + '\n',
     );
     for (const name of ['README.md', 'AGENTS.md']) {
       const path = join(directory, name);
@@ -174,7 +169,11 @@ export const agoraTemplate: TemplateDefinition = {
     }
     await writeFile(
       join(directory, 'DEPLOYMENT.md'),
-      '# Zeabur + Agora Conversational AI\n\nCreate one Zeabur service from this repository with the repository root as build root. Set ZBPACK_DOCKERFILE_PATH=Dockerfile and PORT=8787. Copy the environment variables from .env.local.example into Zeabur service variables, then generate an HTTPS domain. Use /api/health for the health check. Git redeployments rebuild the same service.\n\nThe Node service serves both frontend and API. There is no Python worker or database. Enable Agora Conversational AI and RTM, publish an English assistant pipeline, and set AGORA_PIPELINE_ID. The pipeline owns its models and voice. Match AGORA_AVATAR_SAMPLE_RATE to its TTS output.\n\nSession creation starts a hosted agent. Disconnect and initialization failures stop it through the backend. Page-close cleanup is best effort, with a 60-second idle timeout fallback. Sessions and client tokens last 30 minutes; start a fresh conversation afterward.\n\nLocal setup writes .env.local only. It never provisions Zeabur or uploads secrets.\n',
+      '# Cloudflare Workers + Agora Conversational AI\n\n' +
+        `Run \`${run('wrangler -- login')}\`. Set your non-secret configuration from .dev.vars in the vars section of wrangler.jsonc. Upload AGORA_APP_CERTIFICATE and SPATIUS_API_KEY with \`${run('wrangler -- secret put AGORA_APP_CERTIFICATE')}\` (repeat for SPATIUS_API_KEY). Run \`${run('deploy')}\` to deploy the React frontend and API as one Cloudflare Worker.\n\n` +
+        'Agora hosts the conversational agent. There is no Python worker, Node server, container, or database to deploy. Enable Agora Conversational AI and RTM, publish an English assistant pipeline, and set AGORA_PIPELINE_ID. The pipeline owns its models and voice. Match AGORA_AVATAR_SAMPLE_RATE to its TTS output.\n\n' +
+        'Session creation starts a hosted agent. Disconnect and initialization failures stop it through the Worker API. Page-close cleanup is best effort, with a 60-second idle timeout fallback. Sessions and client tokens last 30 minutes; start a fresh conversation afterward.\n\n' +
+        'Local setup writes .dev.vars only. It never provisions Cloudflare services or uploads secrets.\n',
     );
   },
   createInstallPlan(directory, managers, platform) {
@@ -201,7 +200,7 @@ export const agoraTemplate: TemplateDefinition = {
   },
   setup: {
     recognizes: async (directory) =>
-      (await readProjectConfig(directory))?.stack === 'zeabur-agora',
+      (await readProjectConfig(directory))?.stack === 'cloudflare-agora',
     run: runAgoraSetup,
   },
   verification: [

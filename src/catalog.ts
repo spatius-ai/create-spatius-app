@@ -3,32 +3,14 @@ import type { SetupPrompts } from './prompts.js';
 
 export const stacks = {
   'cloudflare-livekit': {
-    label: 'Cloudflare + LiveKit Cloud Agents',
+    label: 'LiveKit',
     web: 'cloudflare',
     agent: 'livekit',
     provider: 'livekit',
   },
-  'cloudflare-livekit-railway': {
-    label: 'Cloudflare + LiveKit Agents on Railway',
+  'cloudflare-agora': {
+    label: 'Agora Conversational AI',
     web: 'cloudflare',
-    agent: 'railway',
-    provider: 'livekit',
-  },
-  'railway-livekit-cloud': {
-    label: 'Railway + LiveKit Cloud Agents',
-    web: 'railway',
-    agent: 'livekit',
-    provider: 'livekit',
-  },
-  'railway-livekit': {
-    label: 'Railway + LiveKit Agents on Railway',
-    web: 'railway',
-    agent: 'railway',
-    provider: 'livekit',
-  },
-  'zeabur-agora': {
-    label: 'Zeabur + Agora Conversational AI',
-    web: 'zeabur',
     agent: 'agora',
     provider: 'agora',
   },
@@ -55,7 +37,11 @@ export async function selectCatalog(options: {
   }));
   return validateSelection(
     options.interactive
-      ? await options.prompts.choose('Which stack?', choices, DEFAULT_STACK)
+      ? await options.prompts.choose(
+          'Which voice AI provider?',
+          choices,
+          DEFAULT_STACK,
+        )
       : DEFAULT_STACK,
   );
 }

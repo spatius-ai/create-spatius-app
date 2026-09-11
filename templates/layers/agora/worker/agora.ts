@@ -2,16 +2,7 @@ import { randomInt, randomUUID } from 'node:crypto';
 import agoraToken from 'agora-token';
 const { RtcTokenBuilder, RtcRole } = agoraToken;
 import { signCapability, verifyCapability } from './capability.js';
-export interface AgoraEnvironment {
-  AGORA_APP_ID: string;
-  AGORA_APP_CERTIFICATE: string;
-  AGORA_PIPELINE_ID: string;
-  SPATIUS_APP_ID: string;
-  SPATIUS_API_KEY: string;
-  SPATIUS_AVATAR_ID: string;
-  SPATIUS_REGION?: string;
-  AGORA_AVATAR_SAMPLE_RATE?: string;
-}
+export type AgoraEnvironment = CloudflareBindings;
 export class ConfigurationError extends Error {}
 function configuration(env: AgoraEnvironment) {
   for (const key of [

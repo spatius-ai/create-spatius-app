@@ -72,9 +72,9 @@ To add a future internal entry:
 
 The `pnpm template:test:e2e` command builds the CLI and runs Chromium
 tests after the pnpm/uv JavaScript checks for LiveKit stacks.
-CI runs each of the five stacks as a separate job.
+CI runs each of the two provider templates as a separate job.
 To verify one entry locally, run `pnpm build` followed by
-`node scripts/check-template.mjs --stack railway-livekit`. It installs Chromium
+`node scripts/check-template.mjs --browser --stack cloudflare-livekit`. It installs Chromium
 (including system dependencies on Linux), retains output under
 `test-results/<id>/`, and continues the normal full verification. Use it when
 the generated template includes Playwright configuration and `test:e2e`.
@@ -104,7 +104,7 @@ Add catalog matrix coverage when adding a stack. JSON consumers use
 Generated deployment and customization instructions belong in the generated
 project, not the repository README.
 
-The `zeabur-agora` adapter reuses the shared presentation and Node server,
+The `cloudflare-agora` adapter reuses the shared presentation and Cloudflare configuration,
 but owns its hosted-agent API, browser session lifecycle, and local credential setup.
 Its verification variants omit Python; the CLI must not probe or prompt for Python
 tooling for that stack. Live media and cloud deployment smoke tests require real

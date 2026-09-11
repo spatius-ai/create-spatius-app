@@ -187,13 +187,7 @@ describe('packed CLI', () => {
       { cwd: root },
     );
     expect(JSON.parse(registryResult.stdout)).toEqual({
-      ids: [
-        'cloudflare-livekit',
-        'cloudflare-livekit-railway',
-        'railway-livekit-cloud',
-        'railway-livekit',
-        'zeabur-agora',
-      ],
+      ids: ['cloudflare-livekit', 'cloudflare-agora'],
       selected: 'cloudflare-livekit',
       directory: await realpath(
         join(packageRoot, 'templates/cloudflare-livekit'),

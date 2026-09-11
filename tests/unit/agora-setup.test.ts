@@ -29,10 +29,10 @@ async function project() {
       join(directory, 'spatius.config.json'),
       JSON.stringify({
         version: 2,
-        stack: 'zeabur-agora',
+        stack: 'cloudflare-agora',
       }),
     ),
-    ...['package.json', '.env.local.example', 'worker/agora.ts'].map((file) =>
+    ...['package.json', '.dev.vars.example', 'worker/agora.ts'].map((file) =>
       writeFile(join(directory, file), ''),
     ),
   ]);
@@ -59,26 +59,26 @@ describe('Agora-only setup', () => {
     const choose = vi.fn();
     expect(
       await selectCatalog({
-        stack: 'zeabur-agora',
+        stack: 'cloudflare-agora',
         interactive: true,
         prompts: { choose },
       }),
-    ).toEqual({ stack: 'zeabur-agora' });
+    ).toEqual({ stack: 'cloudflare-agora' });
     expect(choose).not.toHaveBeenCalled();
     expect(() => validateSelection('invalid')).toThrow('Unsupported');
   });
   it('writes one private environment file, preserving unrelated variables', async () => {
     const directory = await project();
-    await writeFile(join(directory, '.env.local'), 'EXTRA=value\n');
+    await writeFile(join(directory, '.dev.vars'), 'EXTRA=value\n');
     expect(await runAgoraSetup({ targetDirectory: directory, prompts })).toBe(
       'configured',
     );
-    const contents = await readFile(join(directory, '.env.local'), 'utf8');
+    const contents = await readFile(join(directory, '.dev.vars'), 'utf8');
     expect(contents).toContain('EXTRA=value');
     expect(contents).toContain('AGORA_PIPELINE_ID="pipeline"');
     // Windows exposes DOS attributes through stat.mode, not POSIX permissions.
     if (process.platform !== 'win32')
-      expect((await stat(join(directory, '.env.local'))).mode & 0o777).toBe(
+      expect((await stat(join(directory, '.dev.vars'))).mode & 0o777).toBe(
         0o600,
       );
     expect(prompts.password).toHaveBeenCalledWith('AGORA_APP_CERTIFICATE');
@@ -87,7 +87,7 @@ describe('Agora-only setup', () => {
   it('refuses symlinked credentials', async () => {
     const directory = await project();
     await writeFile(join(directory, 'outside'), 'untouched');
-    await symlink(join(directory, 'outside'), join(directory, '.env.local'));
+    await symlink(join(directory, 'outside'), join(directory, '.dev.vars'));
     await expect(
       runAgoraSetup({ targetDirectory: directory, prompts }),
     ).rejects.toThrow('safely');
