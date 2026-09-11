@@ -43,7 +43,8 @@ class Assistant(Agent):
         )
 
 
-server = AgentServer()
+# Warm region, TLS, and session-token caches in each job process before dispatch.
+server = AgentServer(setup_fnc=spatius.prewarm)
 
 
 @server.on("worker_registered")

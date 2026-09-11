@@ -11,6 +11,55 @@ with patch("dotenv.load_dotenv"):
     from src import agent as agent_module
 
 
+class ProcessPrewarmTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.enterContext(
+            patch.dict(
+                "os.environ",
+                {"SPATIUS_APP_ID": "app-test", "SPATIUS_API_KEY": "key-test"},
+                clear=True,
+            )
+        )
+        # Exercise the registered hook and installed plugin without provider calls.
+        self.sdk_prewarm = self.enterContext(
+            patch(
+                "spatius.prewarm",
+                new_callable=AsyncMock,
+                return_value=SimpleNamespace(
+                    region="test-region",
+                    tls_warmed=True,
+                    session_token_prefetched=True,
+                ),
+            )
+        )
+
+    def test_process_setup_warms_connection_state_without_an_avatar(self) -> None:
+        with patch.object(agent_module.spatius, "AvatarSession") as avatar:
+            agent_module.server.setup_fnc(SimpleNamespace())
+
+        self.sdk_prewarm.assert_awaited_once()
+        options = self.sdk_prewarm.call_args.kwargs
+        self.assertEqual(options["app_id"], "app-test")
+        self.assertEqual(options["api_key"], "key-test")
+        self.assertEqual(options["region"], "auto")
+        self.assertTrue(options["prefetch_session_token"])
+        avatar.assert_not_called()
+
+    def test_warmup_failure_does_not_fail_process_setup(self) -> None:
+        self.sdk_prewarm.side_effect = ConnectionError("warm-up unavailable")
+
+        with self.assertLogs("livekit.plugins.spatius", level="WARNING"):
+            agent_module.server.setup_fnc(SimpleNamespace())
+
+        self.sdk_prewarm.assert_awaited_once()
+
+    def test_process_setup_without_configuration_skips_warmup(self) -> None:
+        with patch.dict("os.environ", {}, clear=True):
+            agent_module.server.setup_fnc(SimpleNamespace())
+
+        self.sdk_prewarm.assert_not_awaited()
+
+
 class AgentStartupTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self) -> None:
         self.events: list[str] = []

@@ -6,6 +6,19 @@ and turn detection. The Spatius plugin sends the generated speech through the
 Spatius motion service and publishes synchronized avatar data into the same
 LiveKit room as the browser.
 
+## Session startup
+
+The worker runs `spatius.prewarm` through `AgentServer`'s `setup_fnc` when each
+job process initializes. It prepares automatic region selection, TLS connections,
+and a session token using the same Spatius environment variables as the avatar
+session, so a warm process can skip that setup when a room is dispatched.
+The avatar ID still comes from the job's dispatch metadata.
+
+Warm-up is best effort: missing configuration or a failed warm-up leaves normal
+session startup responsible for resolving the region and fetching a token.
+LiveKit keeps idle processes ready in production; development mode initializes
+processes on demand, so its first session still pays the warm-up cost.
+
 ## Voice configuration
 
 - TTS uses `cartesia/sonic-3.6` through LiveKit Inference. Setup offers
