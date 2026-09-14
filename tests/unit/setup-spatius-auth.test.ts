@@ -83,16 +83,16 @@ describe('Spatius loopback callback server', () => {
     const html = await response.text();
     expect(html).toContain('Authorization complete');
     expect(html).toContain('Continue in your terminal');
-    expect(html).not.toContain('create-spatius-app');
+    expect(html.match(/utm_source=create-spatius-app/gu)).toHaveLength(4);
     expect(html).not.toContain('Real-time avatars. Human connections.');
     expect(html.match(/class="external-icon"/gu)).toHaveLength(4);
     expect(
       html.match(/class="link-label"><svg aria-hidden="true"/gu),
     ).toHaveLength(4);
     for (const href of [
-      'https://www.spatius.ai/',
-      'https://docs.spatius.ai/',
-      'https://app.spatius.ai',
+      'https://www.spatius.ai/?utm_source=create-spatius-app',
+      'https://docs.spatius.ai/?utm_source=create-spatius-app',
+      'https://app.spatius.ai?utm_source=create-spatius-app',
       'https://github.com/spatius-ai',
       'https://discord.gg/9HGhZfHZh9',
     ]) {
@@ -177,57 +177,82 @@ describe('Spatius browser login', () => {
     };
   }
 
-  it('prints the fallback URL, tolerates browser failure, exchanges, and returns a session', async () => {
-    const redactor = new SecretRedactor();
-    const onUrl = vi.fn();
-    const onBrowserFailure = vi.fn();
-    const close = vi.fn(async () => undefined);
-    const revoke = vi.fn(async () => undefined);
-    let callbackWaitStarted = false;
-    const wait = vi.fn<SpatiusCallbackServer['waitForCallback']>(async () => {
-      callbackWaitStarted = true;
-      return { authCode: 'auth-code', authRequestId: 'request-1' };
-    });
-    const client = {
-      createAuthSession: vi.fn(async () => ({
-        authRequestId: 'request-1',
-        authorizeUrl: 'https://app.spatius.ai/cli/auth/request-1',
-        expiresIn: 60,
-      })),
-      exchangeAuthCode: vi.fn(async () => ({
-        accessToken: 'distinctive-access-token',
-        refreshToken: 'distinctive-refresh-token',
-      })),
-      refresh: vi.fn(),
-      revoke,
-    } as unknown as SpatiusApiClient;
-
-    const session = await loginToSpatius({
-      callbackServerFactory: async () => callbackServer({ close, wait }),
-      client,
-      onAuthorizationUrl: onUrl,
-      onBrowserOpenFailure: onBrowserFailure,
-      openBrowser: async () => {
+  it.each([
+    [
+      'https://app.spatius.ai/cli/auth/request-1',
+      'https://app.spatius.ai/cli/auth/request-1?utm_source=create-spatius-app',
+    ],
+    [
+      'https://auth.studio.spatius.ai/login?state=abc&redirect_uri=http%3A%2F%2Flocalhost%2Fcallback#approve',
+      'https://auth.studio.spatius.ai/login?state=abc&redirect_uri=http%3A%2F%2Flocalhost%2Fcallback&utm_source=create-spatius-app#approve',
+    ],
+    [
+      'https://app.spatius.ai/auth?utm_source=other&utm_source=duplicate&state=abc',
+      'https://app.spatius.ai/auth?utm_source=create-spatius-app&state=abc',
+    ],
+    [
+      'http://localhost:1234/auth?state=abc#approve',
+      'http://localhost:1234/auth?state=abc#approve',
+    ],
+    ['https://notspatius.ai/auth', 'https://notspatius.ai/auth'],
+    [
+      'https://spatius.ai.example.com/auth',
+      'https://spatius.ai.example.com/auth',
+    ],
+  ])(
+    'prints and opens %s, tolerates browser failure, and returns a session',
+    async (authorizeUrl, expectedUrl) => {
+      const redactor = new SecretRedactor();
+      const onUrl = vi.fn();
+      const onBrowserFailure = vi.fn();
+      const close = vi.fn(async () => undefined);
+      const revoke = vi.fn(async () => undefined);
+      let callbackWaitStarted = false;
+      const wait = vi.fn<SpatiusCallbackServer['waitForCallback']>(async () => {
+        callbackWaitStarted = true;
+        return { authCode: 'auth-code', authRequestId: 'request-1' };
+      });
+      const client = {
+        createAuthSession: vi.fn(async () => ({
+          authRequestId: 'request-1',
+          authorizeUrl,
+          expiresIn: 60,
+        })),
+        exchangeAuthCode: vi.fn(async () => ({
+          accessToken: 'distinctive-access-token',
+          refreshToken: 'distinctive-refresh-token',
+        })),
+        refresh: vi.fn(),
+        revoke,
+      } as unknown as SpatiusApiClient;
+      const openBrowser = vi.fn(async () => {
         expect(callbackWaitStarted).toBe(true);
         throw new Error('no browser');
-      },
-      redactor,
-    });
+      });
 
-    expect(session).toBeInstanceOf(SpatiusAuthenticatedSession);
-    expect(onUrl).toHaveBeenCalledWith(
-      'https://app.spatius.ai/cli/auth/request-1',
-    );
-    expect(onBrowserFailure).toHaveBeenCalledOnce();
-    expect(close).toHaveBeenCalledOnce();
-    expect(
-      redactor.redact(
-        'distinctive-access-token distinctive-refresh-token auth-code',
-      ),
-    ).not.toMatch(/distinctive|auth-code/u);
-    await session.revoke();
-    expect(revoke).toHaveBeenCalledOnce();
-  });
+      const session = await loginToSpatius({
+        callbackServerFactory: async () => callbackServer({ close, wait }),
+        client,
+        onAuthorizationUrl: onUrl,
+        onBrowserOpenFailure: onBrowserFailure,
+        openBrowser,
+        redactor,
+      });
+
+      expect(session).toBeInstanceOf(SpatiusAuthenticatedSession);
+      expect(onUrl).toHaveBeenCalledWith(expectedUrl);
+      expect(openBrowser).toHaveBeenCalledExactlyOnceWith(expectedUrl);
+      expect(onBrowserFailure).toHaveBeenCalledOnce();
+      expect(close).toHaveBeenCalledOnce();
+      expect(
+        redactor.redact(
+          'distinctive-access-token distinctive-refresh-token auth-code',
+        ),
+      ).not.toMatch(/distinctive|auth-code/u);
+      await session.revoke();
+      expect(revoke).toHaveBeenCalledOnce();
+    },
+  );
 
   it.each([
     { message: 'authorization declined', browserFails: false },

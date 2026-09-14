@@ -239,6 +239,10 @@ function validateAuthorizationUrl(value: string): string {
   ) {
     throw new Error('Spatius returned an unsafe authorization URL.');
   }
+  if (url.hostname.endsWith('.spatius.ai')) {
+    url.searchParams.set('utm_source', 'create-spatius-app');
+    return url.href;
+  }
   return value;
 }
 
