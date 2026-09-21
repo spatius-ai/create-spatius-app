@@ -173,8 +173,8 @@ importers:
         specifier: 1.1.5
         version: 1.1.5(@spatius/avatarkit@1.3.8(@types/react@19.3.0)(@webgpu/types@0.1.74)(react@19.3.0)(vite@8.3.0(@types/node@26.6.2)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)))(agora-rtc-sdk-ng@4.24.8(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2))
       agora-agent-client-toolkit:
-        specifier: 2.9.1
-        version: 2.9.1(agora-rtc-sdk-ng@4.24.8(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2))(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
+        specifier: 2.10.0
+        version: 2.10.0(agora-rtc-sdk-ng@4.24.8(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2))(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
       agora-rtc-sdk-ng:
         specifier: 4.24.8
         version: 4.24.8(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
@@ -1660,8 +1660,8 @@ packages:
     resolution: {integrity: sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ==}
     engines: {node: '>= 6.0.0'}
 
-  agora-agent-client-toolkit@2.9.1:
-    resolution: {integrity: sha512-9aCULU0srLcKaidzNwTzWtb/jreiDY3pZXbh1wmmlKNtcYZeWx1WSubTJ+FdE17wQO087yLMnsuprY5Y0Aa93g==}
+  agora-agent-client-toolkit@2.10.0:
+    resolution: {integrity: sha512-IeFZiqXS146mFQLJQWf9o1K+UdQ6Wv2Agk7AfVK51XSujre/ULafYVQR0S+vAKNAFnrXsH3+zkAkCXzTW27DMA==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       agora-rtc-sdk-ng: '>=4.23.4'
@@ -3868,7 +3868,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  agora-agent-client-toolkit@2.9.1(agora-rtc-sdk-ng@4.24.8(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2))(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2):
+  agora-agent-client-toolkit@2.10.0(agora-rtc-sdk-ng@4.24.8(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2))(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2):
     dependencies:
       agora-rtc-sdk-ng: 4.24.8(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
     optionalDependencies:
