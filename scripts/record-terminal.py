@@ -30,6 +30,7 @@ def record(destination):
 
     # Each response waits for its actual prompt; timing alone never advances a step.
     steps = [
+        ("Which voice AI provider?", "\r"),  # Accept the default LiveKit stack.
         ("Where should we create your project?", "my-avatar-app\r"),
         ("Which JavaScript package manager?", "\r"),
         ("Which Python package manager?", "\r"),
