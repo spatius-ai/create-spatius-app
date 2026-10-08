@@ -170,11 +170,11 @@ importers:
         specifier: 2.9.24
         version: 2.9.24(livekit-client@2.22.2(@types/dom-mediacapture-record@1.0.22))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(tslib@2.8.1)
       '@spatius/avatarkit':
-        specifier: 1.3.9
-        version: 1.3.9(@types/react@19.3.0)(@webgpu/types@0.1.74)(react@19.3.0)(vite@8.3.3(@types/node@26.6.4)(esbuild@0.28.1)(jiti@2.7.0))
+        specifier: 1.3.10
+        version: 1.3.10(@webgpu/types@0.1.74)(vite@8.3.3(@types/node@26.6.4)(esbuild@0.28.1)(jiti@2.7.0))
       '@spatius/avatarkit-rtc':
         specifier: 1.1.5
-        version: 1.1.5(@spatius/avatarkit@1.3.9(@types/react@19.3.0)(@webgpu/types@0.1.74)(react@19.3.0)(vite@8.3.3(@types/node@26.6.4)(esbuild@0.28.1)(jiti@2.7.0)))(livekit-client@2.22.2(@types/dom-mediacapture-record@1.0.22))
+        version: 1.1.5(@spatius/avatarkit@1.3.10(@webgpu/types@0.1.74)(vite@8.3.3(@types/node@26.6.4)(esbuild@0.28.1)(jiti@2.7.0)))(livekit-client@2.22.2(@types/dom-mediacapture-record@1.0.22))
       livekit-client:
         specifier: 2.22.2
         version: 2.22.2(@types/dom-mediacapture-record@1.0.22)
@@ -1008,15 +1008,6 @@ packages:
   '@poppinss/exception@1.2.3':
     resolution: {integrity: sha512-dCED+QRChTVatE9ibtoaxc+WkdzOSjYTKi/+uacHWIsfodVfpsueo3+DKpgU5Px8qXjgmXkSvhXvSCz3fnP9lw==}
 
-  '@posthog/browser-common@0.7.1':
-    resolution: {integrity: sha512-JO/5dIVx3NTrbg0W2VciDDmmizsvwaYYHE5cnJE1Gra+UqBnEuVGH9DTE/kBFgVMp+08z5uj/aAprsYD2WG/QQ==}
-
-  '@posthog/core@1.50.2':
-    resolution: {integrity: sha512-El7y/ipZ45OFBRTN/+ixat9Nw21bW+pKKnX0G+rG4rWxBtDA47Ub/ZUnHvZNhAufNInQr4AYCUeWQsuJsTcoKg==}
-
-  '@posthog/types@1.408.0':
-    resolution: {integrity: sha512-xMY8QrRKsTYu4A4Of7XF/xEt0HcnZOWwnICm3do7tGKA0lTlnnr4YW0AHQN1Uv2P3BDqf5GQoqh91MKE+dgdcA==}
-
   '@rolldown/binding-android-arm-eabi@1.2.13':
     resolution: {integrity: sha512-Vu/NICrgdRvUOeaJZIyB2FP63s6fO/4ud5l8dXmxDx9yDyn+mN0y+gsvsVviSli+T361Aqo0h46EuMoobrwawA==}
     engines: {node: ^20.19.0 || >=22.12.0}
@@ -1132,8 +1123,8 @@ packages:
       livekit-client:
         optional: true
 
-  '@spatius/avatarkit@1.3.9':
-    resolution: {integrity: sha512-fRlHAu/7J/Z4MJueTtlLWpo4SR8TyXhOPPxcMXv4rdTtvpZZXksrcfhxRUkXU1agCF2R+mZY8u9PEvkAiahSYw==}
+  '@spatius/avatarkit@1.3.10':
+    resolution: {integrity: sha512-1SBDpsZAgz4GLcHxiyGW18HWpXhjoawbVY3asXVW7r8680CpUEVtVfEyuNLDZ1EeNeg/o65zU2yWK9hkdIsDww==}
     peerDependencies:
       '@webgpu/types': '*'
       next: '>=13.0.0'
@@ -1297,9 +1288,6 @@ packages:
 
   '@types/react@19.3.0':
     resolution: {integrity: sha512-N0rFCuH9YoxG9/m61l9MfpJKfmLOVU0em7ipIz6TRgSSkvReLB9vL85GB+yr8Bs5leqpvg96JSwF4ZS1s4viQg==}
-
-  '@types/trusted-types@2.0.7':
-    resolution: {integrity: sha512-ScaPdn1dQczgbl0QFTeTOmVHFULt394XJgOQNoyVhZ6r2vLnMLJfBPd53SB52T/3G36VI1/g2MZaX0cwDuXsfw==}
 
   '@typescript-eslint/eslint-plugin@8.71.0':
     resolution: {integrity: sha512-pqcS9c1HxZTHt7End4nXqd0s5lJrrFzrgCkKFJrsbUnaL6M3+6oBFZaslg6Gjsl3argl2DDRFROnXARaZ2e4Nw==}
@@ -1471,9 +1459,6 @@ packages:
     resolution: {integrity: sha512-ei8Aos7ja0weRpFzJnEA9UHJ/7XQmqglbRwnf2ATjcB9Wq874VKH9kfjjirM6UhU2/E5fFYadylyhFldcqSidQ==}
     engines: {node: '>=18'}
 
-  core-js@3.50.0:
-    resolution: {integrity: sha512-BRWgOLKkFeCgRudR6zrs8p9XJZcE14grzKMMssoYrk6krtuEZ7MTKPIY5RzOnqsEKIR9kst7wNzphttraT+Yqw==}
-
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
     engines: {node: '>= 8'}
@@ -1514,9 +1499,6 @@ packages:
 
   dom-accessibility-api@0.5.16:
     resolution: {integrity: sha512-X7BJ2yElsnOJ30pZF4uIIDfBEVgF4XEBxL9Bxhy6dnrm5hkzqmsWHGTiHqRiITNhMyFLyAiWndIJP7Z1NTteDg==}
-
-  dompurify@3.4.14:
-    resolution: {integrity: sha512-dVoH9z+MY+C9IilgGCk3YfFqjLi3fChm2OiKJMzh6axrJ5qwxqWaZamgmHrpv22CN/KdbZJuGEGgfQoL00LTdg==}
 
   emoji-regex@10.6.0:
     resolution: {integrity: sha512-toUI84YS5YmxW219erniWD0CIVOo46xGKColeNQRgOzDorgBi1v4D71/OFzgD9GO2UGKIv1C3Sp8DAn0+j5w7A==}
@@ -1627,9 +1609,6 @@ packages:
     peerDependenciesMeta:
       picomatch:
         optional: true
-
-  fflate@0.4.9:
-    resolution: {integrity: sha512-zdxgIEddhfsyCaWpJ2SdXEP8ZMrKJ6+5jl4OupODcywU0IhRk6gdXuVGcPICyfx2H97hVK7xmJtRLPjkxAX8Vw==}
 
   file-entry-cache@11.1.5:
     resolution: {integrity: sha512-+PFTHITI08JIGhnNpGNI8T8inUpgZfk3GNEqfT9R2zZV2iFXg3CvqzSl/uEhs7TSGujYRELEANyDvS8Fj7+S7Q==}
@@ -2025,25 +2004,6 @@ packages:
     resolution: {integrity: sha512-RRuzqDtt5Y9h3quz5hWhK+TPnsmVs6WwSU6LkJMeY4HstUEDuYTG8UJSdawMRzmzAtV+KEoG8N3Qg2qLy5vM/A==}
     engines: {node: ^10 || ^12 || >=14}
 
-  posthog-js@1.425.1:
-    resolution: {integrity: sha512-GfdAUf402Prjt3ofkj4dh4k/m1SkYvgCeASyWj1xxcIVT7QnB9gGsslDwAZBZ6Wrtwxkq91gFbpSo/v633Q+1w==}
-    peerDependencies:
-      '@types/react': '>=16.8.0'
-      react: '>=16.8.0'
-    peerDependenciesMeta:
-      '@types/react':
-        optional: true
-      react:
-        optional: true
-
-  preact@10.29.8:
-    resolution: {integrity: sha512-ej2aVZ+vZ8WO7tvlQWRM9N63A0KzF9q4mWJfDUHgYaIofWY9hu74QdnQrjoPMmZi2/nZ5gN0bJCQF49xQqx09Q==}
-    peerDependencies:
-      preact-render-to-string: '>=5'
-    peerDependenciesMeta:
-      preact-render-to-string:
-        optional: true
-
   prelude-ls@1.2.1:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
     engines: {node: '>= 0.8.0'}
@@ -2064,9 +2024,6 @@ packages:
   qified@0.10.1:
     resolution: {integrity: sha512-+Owyggi9IxT1ePKGafcI87ubSmxol6smwJ+RAHDQlx9+9cPwFWDiKFFCPuWhr9ignlGpZ9vDQLw67N4dcTVFEA==}
     engines: {node: '>=20'}
-
-  query-selector-shadow-dom@1.0.1:
-    resolution: {integrity: sha512-lT5yCqEBgfoMYpf3F2xQRK7zEr1rhIIZuceDK6+xRkJQ4NMbHTwXqk4NkwDwQMNqXgG9r9fyHnzwNVs6zV5KRw==}
 
   react-dom@19.3.0:
     resolution: {integrity: sha512-JDk8dgif51OjFoDE70+OT9ICyYr+69HlmihNwp1+Nsfbna3t5sIiCa9ZJktDmQ4/1b/rn26hIAR2uYXDMr5r0Q==}
@@ -2336,9 +2293,6 @@ packages:
   w3c-xmlserializer@6.0.0:
     resolution: {integrity: sha512-4Nsy8K5Tr6SPDH9jhKJOHf7ChDrc1zufZTVSF7x72hwuEXBqxqk9G6cK+K2NRUtB3iELRJqjXb4JPDMBjMTl2Q==}
     engines: {node: ^22.22.2 || ^24.15.0 || >=26.0.0}
-
-  web-vitals@6.2.1:
-    resolution: {integrity: sha512-rLcLXA2sx6+9dE88NHFubwTtGxpK4yYBLj6qHPdFoCaLr0cXGb4efOqtKLlm4loGA4OEKHIQKMKzZkKyOh5ctw==}
 
   webidl-conversions@8.0.1:
     resolution: {integrity: sha512-BMhLD/Sw+GbJC21C/UgyaZX41nPt8bUTg+jWyDeg7e7YN4xOM05YPSIXceACnXVtqyEw/LMClUQMtMZ+PGGpqQ==}
@@ -3007,17 +2961,6 @@ snapshots:
 
   '@poppinss/exception@1.2.3': {}
 
-  '@posthog/browser-common@0.7.1':
-    dependencies:
-      '@posthog/core': 1.50.2
-      '@posthog/types': 1.408.0
-
-  '@posthog/core@1.50.2':
-    dependencies:
-      '@posthog/types': 1.408.0
-
-  '@posthog/types@1.408.0': {}
-
   '@rolldown/binding-android-arm-eabi@1.2.13':
     optional: true
 
@@ -3067,16 +3010,16 @@ snapshots:
 
   '@sindresorhus/is@7.2.0': {}
 
-  '@spatius/avatarkit-rtc@1.1.5(@spatius/avatarkit@1.3.9(@types/react@19.3.0)(@webgpu/types@0.1.74)(react@19.3.0)(vite@8.3.3(@types/node@26.6.4)(esbuild@0.28.1)(jiti@2.7.0)))(livekit-client@2.22.2(@types/dom-mediacapture-record@1.0.22))':
+  '@spatius/avatarkit-rtc@1.1.5(@spatius/avatarkit@1.3.10(@webgpu/types@0.1.74)(vite@8.3.3(@types/node@26.6.4)(esbuild@0.28.1)(jiti@2.7.0)))(livekit-client@2.22.2(@types/dom-mediacapture-record@1.0.22))':
     dependencies:
       '@bufbuild/protobuf': 2.14.1
       '@opentelemetry/api': 1.9.1
       '@opentelemetry/api-logs': 0.218.0
-      '@spatius/avatarkit': 1.3.9(@types/react@19.3.0)(@webgpu/types@0.1.74)(react@19.3.0)(vite@8.3.3(@types/node@26.6.4)(esbuild@0.28.1)(jiti@2.7.0))
+      '@spatius/avatarkit': 1.3.10(@webgpu/types@0.1.74)(vite@8.3.3(@types/node@26.6.4)(esbuild@0.28.1)(jiti@2.7.0))
     optionalDependencies:
       livekit-client: 2.22.2(@types/dom-mediacapture-record@1.0.22)
 
-  '@spatius/avatarkit@1.3.9(@types/react@19.3.0)(@webgpu/types@0.1.74)(react@19.3.0)(vite@8.3.3(@types/node@26.6.4)(esbuild@0.28.1)(jiti@2.7.0))':
+  '@spatius/avatarkit@1.3.10(@webgpu/types@0.1.74)(vite@8.3.3(@types/node@26.6.4)(esbuild@0.28.1)(jiti@2.7.0))':
     dependencies:
       '@bufbuild/protobuf': 2.14.1
       '@guiiai/logg': 1.2.11
@@ -3093,13 +3036,8 @@ snapshots:
       '@webgpu/types': 0.1.74
       nanoid: 5.1.16
       opusscript: 0.1.1
-      posthog-js: 1.425.1(@types/react@19.3.0)(react@19.3.0)
     optionalDependencies:
       vite: 8.3.3(@types/node@26.6.4)(esbuild@0.28.1)(jiti@2.7.0)
-    transitivePeerDependencies:
-      - '@types/react'
-      - preact-render-to-string
-      - react
 
   '@speed-highlight/core@1.2.24': {}
 
@@ -3224,9 +3162,6 @@ snapshots:
   '@types/react@19.3.0':
     dependencies:
       csstype: 3.2.3
-
-  '@types/trusted-types@2.0.7':
-    optional: true
 
   '@typescript-eslint/eslint-plugin@8.71.0(@typescript-eslint/parser@8.71.0(eslint@10.12.0(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3))(eslint@10.12.0(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)':
     dependencies:
@@ -3407,8 +3342,6 @@ snapshots:
 
   cookie@1.1.1: {}
 
-  core-js@3.50.0: {}
-
   cross-spawn@7.0.6:
     dependencies:
       path-key: 3.1.1
@@ -3444,10 +3377,6 @@ snapshots:
   detect-libc@2.1.2: {}
 
   dom-accessibility-api@0.5.16: {}
-
-  dompurify@3.4.14:
-    optionalDependencies:
-      '@types/trusted-types': 2.0.7
 
   emoji-regex@10.6.0: {}
 
@@ -3586,8 +3515,6 @@ snapshots:
   fdir@6.5.0(picomatch@4.0.7):
     optionalDependencies:
       picomatch: 4.0.7
-
-  fflate@0.4.9: {}
 
   file-entry-cache@11.1.5:
     dependencies:
@@ -3930,26 +3857,6 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  posthog-js@1.425.1(@types/react@19.3.0)(react@19.3.0):
-    dependencies:
-      '@posthog/browser-common': 0.7.1
-      '@posthog/core': 1.50.2
-      '@posthog/types': 1.408.0
-      core-js: 3.50.0
-      dompurify: 3.4.14
-      fflate: 0.4.9
-      preact: 10.29.8
-      query-selector-shadow-dom: 1.0.1
-      web-vitals: 6.2.1
-      web-vitals-soft-navs: web-vitals@6.2.1
-    optionalDependencies:
-      '@types/react': 19.3.0
-      react: 19.3.0
-    transitivePeerDependencies:
-      - preact-render-to-string
-
-  preact@10.29.8: {}
-
   prelude-ls@1.2.1: {}
 
   prettier@3.9.9: {}
@@ -3965,8 +3872,6 @@ snapshots:
   qified@0.10.1:
     dependencies:
       hookified: 2.2.0
-
-  query-selector-shadow-dom@1.0.1: {}
 
   react-dom@19.3.0(react@19.3.0):
     dependencies:
@@ -4193,8 +4098,6 @@ snapshots:
   w3c-xmlserializer@6.0.0:
     dependencies:
       xml-name-validator: 5.0.0
-
-  web-vitals@6.2.1: {}
 
   webidl-conversions@8.0.1: {}
 
