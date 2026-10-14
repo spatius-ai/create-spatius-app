@@ -56,5 +56,10 @@
     "wrangler": "4.142.0",
     "miniflare": "5.20260910.0-alpha"
   },
-  "packageManager": "pnpm@12.5.1"
+  "packageManager": "pnpm@12.5.1",
+  "overrides": {
+    "@opentelemetry/core@2.7.1": "2.8.0",
+    "sharp@0.35.4": "0.35.5",
+    "undici@7.29.0": "7.29.1"
+  }
 }
