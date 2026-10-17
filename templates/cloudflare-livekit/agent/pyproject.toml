@@ -3,7 +3,7 @@ name = "spatius-livekit-agent"
 version = "0.1.0"
 description = "A LiveKit voice agent with a Spatius avatar"
 readme = "README.md"
-requires-python = ">=3.11,<3.15"
+requires-python = ">=3.15,<3.16"
 dependencies = [
   "livekit-agents[spatius]~=1.8.1",
   "livekit-plugins-noise-cancellation~=0.3.0",
