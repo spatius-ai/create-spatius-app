@@ -176,16 +176,16 @@ importers:
         version: 1.3.9(@types/react@19.3.0)(@webgpu/types@0.1.74)(react@19.3.1)(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13))
       '@spatius/avatarkit-rtc':
         specifier: 1.1.5
-        version: 1.1.5(@spatius/avatarkit@1.3.9(@types/react@19.3.0)(@webgpu/types@0.1.74)(react@19.3.1)(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)))(agora-rtc-sdk-ng@4.24.8(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2))
+        version: 1.1.5(@spatius/avatarkit@1.3.9(@types/react@19.3.0)(@webgpu/types@0.1.74)(react@19.3.1)(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)))(agora-rtc-sdk-ng@4.24.9(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2))
       agora-agent-client-toolkit:
         specifier: 2.10.0
-        version: 2.10.0(agora-rtc-sdk-ng@4.24.8(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2))(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
+        version: 2.10.0(agora-rtc-sdk-ng@4.24.9(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2))(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
       agora-rtc-sdk-ng:
-        specifier: 4.24.8
-        version: 4.24.8(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
+        specifier: 4.24.9
+        version: 4.24.9(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
       agora-rtm-sdk:
         specifier: 2.3.0
-        version: 2.3.0(agora-rtc-sdk-ng@4.24.8(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2))
+        version: 2.3.0(agora-rtc-sdk-ng@4.24.9(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2))
       agora-token:
         specifier: 2.0.7
         version: 2.0.7
@@ -268,17 +268,23 @@ importers:
 
 packages:
 
-  '@agora-js/media@4.24.8':
-    resolution: {integrity: sha512-ULG18xmKeTA2P462lB+rBx46QK0bffj59e/MciCCivqVcn1ZEntFOUEnmkAOv8FzIn5wISC8tr02PZwUbinQVw==}
+  '@agora-js/media@4.24.9':
+    resolution: {integrity: sha512-DSgb87xdxJz/8YxqlK0ppV20mzDmfD+wCYiMdDtylq1iWZEC8Dp8MlwkBYepThkgYHINIO3Q03E8SONfc7uEiw==}
 
-  '@agora-js/protocol@4.24.8':
-    resolution: {integrity: sha512-DDAJnLPY2JUP1YSyFp+Lcyn3FMM6aK/vCH9jk+O6yH/r4+WmruGijqtpUk3bf4iX3Fn8EU4F92woZOIDjjgQaA==}
+  '@agora-js/protocol@4.24.9':
+    resolution: {integrity: sha512-ittT/FhBsa/vLs2k6S8PhAA4cBGhtCu41jPtgS94wrqzklXzroZcCmGxSk9YjdZLjKI2/1Zgcp2dUOMYzxcxzw==}
 
   '@agora-js/report@4.24.8':
     resolution: {integrity: sha512-i4KW+Q632yDIHbRIHNK5w1AZhMUmV6Vh0bL6WxdQQdi7Pmcx2+w4k08W95li8Dcfodl6/ypRD0MbrkYqmEpcRg==}
 
+  '@agora-js/report@4.24.9':
+    resolution: {integrity: sha512-57OWJ+F56fGYK6baKjW7Jm+QwJ1FS8S7AJ5GFG8s/v0myH5N5Jv7ry5MLAYgNgREMg4pbwy01GrMdVkePxa3Qw==}
+
   '@agora-js/shared@4.24.8':
     resolution: {integrity: sha512-N5y8ZD3Rm6mPJT6obuuNYx5xwtjuU1hNIEyHgTrxfAhbfrK41XnH5aLFAaaHQOEJsQwsVRFrHTfEmMb36srkQA==}
+
+  '@agora-js/shared@4.24.9':
+    resolution: {integrity: sha512-LbgD8XfwzRm6RdT/KezwX17gFT9ouiWvDCaPmZJ7Ww3fEUWkuLIYpdNpVmJwDpBjIe/IolhlIzyH/69mxM2tNA==}
 
   '@asamuzakjp/css-color@7.1.3':
     resolution: {integrity: sha512-1t1U8Cm3RBl9vh3RAZhjkPaduzLSvQJRToRrxpGR/eDRW99mOREleuu+mWfiFa795bUzjwht7NgphCKTs2ianQ==}
@@ -1526,8 +1532,8 @@ packages:
       agora-rtm:
         optional: true
 
-  agora-rtc-sdk-ng@4.24.8:
-    resolution: {integrity: sha512-TkHDu1HxYcjfbvpmOfOAucSgMJRlphODQlVN6fwAMCh7yIKt6J4O3wITNCvUkEVi9aaZTjeJOZ+onFUu/zlnuw==}
+  agora-rtc-sdk-ng@4.24.9:
+    resolution: {integrity: sha512-lfT0agcbxag3T4mfCam4e195NNJvzdcps2/s+xJadqcoHV8TdLuIxUcFnwHIQ6ZhrlDhQdlLRBRQXNhw98gPtg==}
 
   agora-rte-extension-ng@1.0.3:
     resolution: {integrity: sha512-Gkh60IomlIrhq7ljDIy4zHgKEhfNx3c0Kto27wKCQp2wCabmHz9ucHT/7u9telUCA6YcNjnFMhenjdJx1JZeEA==}
@@ -2634,10 +2640,10 @@ packages:
 
 snapshots:
 
-  '@agora-js/media@4.24.8(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)':
+  '@agora-js/media@4.24.9(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)':
     dependencies:
-      '@agora-js/report': 4.24.8(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
-      '@agora-js/shared': 4.24.8(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
+      '@agora-js/report': 4.24.9(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
+      '@agora-js/shared': 4.24.9(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
       agora-rte-extension: 1.2.4
       agora-rte-extension-ng: 1.0.3
       axios: 1.20.0(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
@@ -2646,11 +2652,11 @@ snapshots:
       - debug
       - supports-color
 
-  '@agora-js/protocol@4.24.8(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)':
+  '@agora-js/protocol@4.24.9(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)':
     dependencies:
-      '@agora-js/media': 4.24.8(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
-      '@agora-js/report': 4.24.8(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
-      '@agora-js/shared': 4.24.8(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
+      '@agora-js/media': 4.24.9(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
+      '@agora-js/report': 4.24.9(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
+      '@agora-js/shared': 4.24.9(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
       '@bufbuild/protobuf': 2.10.1
       '@types/pako': 2.0.4
       pako: 2.2.0
@@ -2665,8 +2671,26 @@ snapshots:
     transitivePeerDependencies:
       - debug
       - supports-color
+    optional: true
+
+  '@agora-js/report@4.24.9(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)':
+    dependencies:
+      '@agora-js/shared': 4.24.9(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
+      axios: 1.20.0(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
+    transitivePeerDependencies:
+      - debug
+      - supports-color
 
   '@agora-js/shared@4.24.8(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)':
+    dependencies:
+      axios: 1.20.0(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
+      ua-parser-js: 0.7.41
+    transitivePeerDependencies:
+      - debug
+      - supports-color
+    optional: true
+
+  '@agora-js/shared@4.24.9(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)':
     dependencies:
       axios: 1.20.0(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
       ua-parser-js: 0.7.41
@@ -3335,14 +3359,14 @@ snapshots:
 
   '@sindresorhus/is@7.2.0': {}
 
-  '@spatius/avatarkit-rtc@1.1.5(@spatius/avatarkit@1.3.9(@types/react@19.3.0)(@webgpu/types@0.1.74)(react@19.3.1)(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)))(agora-rtc-sdk-ng@4.24.8(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2))':
+  '@spatius/avatarkit-rtc@1.1.5(@spatius/avatarkit@1.3.9(@types/react@19.3.0)(@webgpu/types@0.1.74)(react@19.3.1)(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)))(agora-rtc-sdk-ng@4.24.9(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2))':
     dependencies:
       '@bufbuild/protobuf': 2.14.1
       '@opentelemetry/api': 1.9.1
       '@opentelemetry/api-logs': 0.218.0
       '@spatius/avatarkit': 1.3.9(@types/react@19.3.0)(@webgpu/types@0.1.74)(react@19.3.1)(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13))
     optionalDependencies:
-      agora-rtc-sdk-ng: 4.24.8(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
+      agora-rtc-sdk-ng: 4.24.9(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
 
   '@spatius/avatarkit@1.3.9(@types/react@19.3.0)(@webgpu/types@0.1.74)(react@19.3.1)(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13))':
     dependencies:
@@ -3613,9 +3637,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  agora-agent-client-toolkit@2.10.0(agora-rtc-sdk-ng@4.24.8(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2))(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2):
+  agora-agent-client-toolkit@2.10.0(agora-rtc-sdk-ng@4.24.9(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2))(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2):
     dependencies:
-      agora-rtc-sdk-ng: 4.24.8(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
+      agora-rtc-sdk-ng: 4.24.9(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
     optionalDependencies:
       '@agora-js/report': 4.24.8(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
       jszip: 3.10.1
@@ -3623,12 +3647,12 @@ snapshots:
       - debug
       - supports-color
 
-  agora-rtc-sdk-ng@4.24.8(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2):
+  agora-rtc-sdk-ng@4.24.9(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2):
     dependencies:
-      '@agora-js/media': 4.24.8(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
-      '@agora-js/protocol': 4.24.8(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
-      '@agora-js/report': 4.24.8(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
-      '@agora-js/shared': 4.24.8(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
+      '@agora-js/media': 4.24.9(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
+      '@agora-js/protocol': 4.24.9(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
+      '@agora-js/report': 4.24.9(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
+      '@agora-js/shared': 4.24.9(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
       agora-rte-extension: 1.2.4
       agora-rte-extension-ng: 1.0.3
       axios: 1.20.0(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
@@ -3644,9 +3668,9 @@ snapshots:
 
   agora-rte-extension@1.2.4: {}
 
-  agora-rtm-sdk@2.3.0(agora-rtc-sdk-ng@4.24.8(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)):
+  agora-rtm-sdk@2.3.0(agora-rtc-sdk-ng@4.24.9(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)):
     dependencies:
-      agora-rtc-sdk-ng: 4.24.8(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
+      agora-rtc-sdk-ng: 4.24.9(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
 
   agora-token@2.0.7:
     dependencies:
