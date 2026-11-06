@@ -10,4 +10,4 @@ overrides:
   '@opentelemetry/core@2.7.1': 2.12.0
   minimatch@10.2.6: 11.0.4
   sharp@0.35.4: 0.35.5
-  undici@7.29.0: 7.30.2
+  undici@7.29.0: 8.12.4
