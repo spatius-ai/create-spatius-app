@@ -4,3 +4,5 @@ autoInstallPeers: false
 preferFrozenLockfile: true
 saveExact: true
 strictPeerDependencies: true
+overrides:
+  minimatch@10.2.6: 11.0.4
